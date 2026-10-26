@@ -11,6 +11,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script>
+    // Tandai bahwa animasi aktif (dicabut lagi di main.js kalau anime.js gagal dimuat / reduced motion)
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("anim");
+  </script>
 </head>
 <body>
   <a class="skip" href="#filosofi">Lewati ke konten</a>
@@ -39,18 +43,18 @@
       <div class="sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
       <div class="hero__inner">
-        <p class="eyebrow">Kelas Akhir 2026 – 2027 · Pesantren Modern Daarul ‘Uluum Lido</p>
-        <div class="hero__logo">
+        <p class="eyebrow" data-intro>Kelas Akhir 2026 – 2027 · Pesantren Modern Daarul ‘Uluum Lido</p>
+        <div class="hero__logo" data-intro>
           <img src="assets/web/logo-veinmara.png" alt="Logo angkatan VEINMARA Generation" width="1000" height="1000" fetchpriority="high">
         </div>
         <h1 class="hero__title">
-          <span class="hero__name">Veinmara</span>
-          <span class="hero__gen">Generation</span>
+          <span class="hero__name" data-intro>Veinmara</span>
+          <span class="hero__gen" data-intro>Generation</span>
         </h1>
-        <p class="hero__motto">A Renewal Catalyst</p>
-        <p class="hero__motto-id">Pemantik Perubahan</p>
+        <p class="hero__motto" data-intro>A Renewal Catalyst</p>
+        <p class="hero__motto-id" data-intro>Pemantik Perubahan</p>
 
-        <div class="countdown" id="countdown" hidden>
+        <div class="countdown" id="countdown" data-intro hidden>
           <p class="countdown__label">Menuju Peresmian · <span id="cd-when"></span></p>
           <div class="countdown__grid" role="timer" aria-live="off">
             <div><b id="cd-d">0</b><span>Hari</span></div>
@@ -61,7 +65,7 @@
         </div>
         <p class="hero__done" id="cd-done" hidden>Telah diresmikan · 1 November 2026</p>
       </div>
-      <a class="hero__scroll" href="#filosofi" aria-label="Gulir ke filosofi"><span></span></a>
+      <a class="hero__scroll" href="#filosofi" aria-label="Gulir ke filosofi" data-intro><span></span></a>
     </section>
 
     <!-- ============ FILOSOFI NAMA ============ -->
@@ -185,6 +189,7 @@
     </defs>
   </svg>
 
+  <script src="vendor/anime-4.5.0.umd.min.js"></script>
   <script src="data.js"></script>
   <script src="main.js"></script>
 </body>

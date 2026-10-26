@@ -75,15 +75,19 @@ p { margin: 0 0 1em; }
   margin-bottom: 14px;
 }
 
-/* Teks emas berkilau */
-.gold-text, .hero__name, .section__head h2, .stage__name, .motto-card__en, .footer__name {
+/* Teks emas (statis — kilau dijalankan anime.js sesekali, bukan terus-menerus) */
+.section__head h2, .stage__name, .motto-card__en, .footer__name {
   background: var(--gold-grad);
   background-size: 220% 100%;
+  background-position: 50% 0;
   -webkit-background-clip: text; background-clip: text;
   color: transparent;
-  animation: shimmer 7s linear infinite;
 }
 @keyframes shimmer { from { background-position: 110% 0; } to { background-position: -110% 0; } }
+
+/* Saat anime.js aktif: elemen disembunyikan dulu, lalu dimunculkan oleh animasi.
+   Kalau anime.js gagal dimuat, kelas .anim dicabut dan semua tetap tampil. */
+.anim [data-intro], .anim .reveal { opacity: 0; }
 
 /* ================= NAV ================= */
 .nav {
@@ -137,6 +141,8 @@ p { margin: 0 0 1em; }
   .nav__menu a::after { display: none; }
   .nav__menu a.is-active { background: rgba(198, 152, 86, .12); }
   .nav__brand { opacity: 1; transform: none; }
+  /* backdrop-filter berat saat scroll di HP → ganti latar pekat */
+  .nav.is-scrolled { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(28, 5, 9, .96); }
 }
 
 /* ================= HERO ================= */
@@ -150,39 +156,43 @@ p { margin: 0 0 1em; }
     linear-gradient(180deg, var(--bg-2), var(--bg) 85%);
 }
 .hero__inner { max-width: 820px; }
-.hero__logo {
-  position: relative; width: min(360px, 74vw, 46svh); margin: 0 auto -10px;
-  animation: rise 1.4s var(--ease) both .15s;
-}
+.hero__logo { position: relative; width: min(360px, 74vw, 46svh); margin: 0 auto -10px; }
+/* Glow: radial gradient tanpa filter blur (blur yang dianimasikan berat di HP) */
 .hero__logo::before {
-  content: ""; position: absolute; inset: 14%; z-index: -1; border-radius: 50%;
-  background: radial-gradient(circle, rgba(236, 211, 160, .45), rgba(198, 152, 86, .12) 45%, transparent 70%);
-  filter: blur(20px); animation: pulse 5s ease-in-out infinite;
+  content: ""; position: absolute; inset: -6%; z-index: -1; border-radius: 50%;
+  background: radial-gradient(circle, rgba(236, 211, 160, .32), rgba(198, 152, 86, .1) 40%, transparent 68%);
+  animation: pulse 5s ease-in-out infinite; will-change: transform, opacity;
 }
-.hero__logo img { animation: float 7s ease-in-out infinite 1.6s; filter: drop-shadow(0 18px 40px rgba(0,0,0,.55)); }
+.hero__logo img { will-change: transform; }
 
 .hero__title { display: grid; justify-items: center; line-height: 1; }
 .hero__name {
   font: clamp(48px, 11vw, 120px)/1 var(--f-display);
   letter-spacing: .12em; text-transform: uppercase; padding-left: .12em;
-  animation: shimmer 7s linear infinite, letters 1.6s var(--ease) both .55s;
+  background: linear-gradient(180deg, #f8e6b8 10%, #d9b06d 48%, #a8712c 72%, #e7c78b 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+/* Tiap huruf (hasil splitText) membawa gradiennya sendiri agar bisa digerakkan per huruf */
+.hero__name span {
+  display: inline-block; background: inherit;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  will-change: transform;
 }
 .hero__gen {
   font: clamp(34px, 6.5vw, 64px)/1 var(--f-script); color: var(--cream);
-  margin-top: -.18em; transform: rotate(-4deg);
-  animation: write 1.6s var(--ease) both 1.15s;
+  margin-top: -.18em; rotate: -4deg;
 }
 .hero__motto {
   margin: 26px 0 2px; font: 600 clamp(13px, 2vw, 16px)/1.4 var(--f-body);
   letter-spacing: .5em; text-transform: uppercase; color: var(--gold-light); padding-left: .5em;
-  animation: fadeUp 1s var(--ease) both 1.5s;
 }
-.hero__motto-id { color: var(--muted); font-size: 15px; animation: fadeUp 1s var(--ease) both 1.65s; }
+.hero__motto-id { color: var(--muted); font-size: 15px; }
 
-.countdown { margin-top: 30px; animation: fadeUp 1s var(--ease) both 1.85s; }
+.countdown { margin-top: 30px; }
 .countdown__label { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .countdown__grid { display: inline-grid; grid-template-columns: repeat(4, minmax(64px, 1fr)); gap: 10px; }
 .countdown__grid div {
+  contain: layout paint; /* angka berubah tiap detik → jangan memicu layout halaman */
   padding: 12px 8px 10px; border: 1px solid var(--line); border-radius: 14px;
   background: linear-gradient(180deg, rgba(104, 21, 29, .45), rgba(28, 5, 9, .3));
 }
@@ -190,14 +200,12 @@ p { margin: 0 0 1em; }
   display: block; font: 600 clamp(24px, 5vw, 34px)/1.1 var(--f-body); color: var(--gold-light);
   font-variant-numeric: tabular-nums;
 }
-.countdown__grid b.tick { animation: tick .45s var(--ease); }
 .countdown__grid span { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
 .hero__done { margin-top: 28px; color: var(--emerald-light); letter-spacing: .14em; text-transform: uppercase; font-size: 14px; }
 
 .hero__scroll {
   position: absolute; bottom: 22px; left: 50%; translate: -50% 0;
   width: 26px; height: 42px; border: 1px solid var(--line); border-radius: 20px;
-  animation: fadeUp 1s both 2.2s;
 }
 .hero__scroll span {
   position: absolute; left: 50%; top: 8px; width: 3px; height: 8px; margin-left: -1.5px;
@@ -208,14 +216,18 @@ p { margin: 0 0 1em; }
 .veins { position: absolute; z-index: -1; width: min(760px, 120vw); pointer-events: none; opacity: .9; }
 .veins--tl { top: -110px; left: -160px; transform: rotate(8deg); opacity: .7; }
 .veins--br { bottom: -60px; right: -140px; transform: rotate(188deg); }
-.vein {
-  stroke-dasharray: 1100; stroke-dashoffset: 1100;
-  animation: draw 3.2s var(--ease) forwards, flow 9s ease-in-out infinite 3.2s;
+.vein--emerald { stroke: var(--emerald-light); opacity: .55; }
+/* Titik cahaya yang mengalir di sepanjang garis nadi.
+   Elemen HTML terpisah (bukan di dalam SVG) agar hanya digeser GPU — SVG besar tidak perlu dicat ulang. */
+.vein-dot {
+  position: absolute; top: 0; left: 0; z-index: -1; width: 24px; height: 24px; margin: -12px 0 0 -12px;
+  border-radius: 50%; pointer-events: none; opacity: 0; will-change: transform, opacity;
+  background: radial-gradient(circle, #fffaf0 0 12%, rgba(246, 226, 176, .85) 26%, rgba(198, 152, 86, 0) 70%);
 }
-.vein:nth-child(2) { animation-delay: .15s, 3.35s; }
-.vein:nth-child(3) { animation-delay: .3s, 3.5s; }
-.vein:nth-child(4) { animation-delay: .45s, 3.65s; }
-.vein--emerald { stroke: var(--emerald-light); opacity: .55; animation-delay: .6s, 3.8s; }
+.vein-dot--emerald {
+  width: 20px; height: 20px; margin: -10px 0 0 -10px;
+  background: radial-gradient(circle, #f0fff8 0 12%, rgba(116, 224, 179, .85) 26%, rgba(31, 143, 104, 0) 70%);
+}
 
 /* Kilau */
 .sparkles i {
@@ -318,7 +330,7 @@ p { margin: 0 0 1em; }
 .stage__glow {
   position: absolute; left: 50%; top: 130px; width: 300px; height: 300px; translate: -50% -50%;
   border-radius: 50%; background: radial-gradient(circle, rgba(236, 211, 160, .35), transparent 65%);
-  filter: blur(10px); animation: pulse 4s ease-in-out infinite;
+  animation: pulse 4s ease-in-out infinite; will-change: transform, opacity;
 }
 .stage__img {
   position: relative; width: auto; height: 220px; max-width: 86%; margin: 0 auto 20px; object-fit: contain;
@@ -327,11 +339,6 @@ p { margin: 0 0 1em; }
 .stage__num { font: 600 12px var(--f-body); letter-spacing: .3em; color: var(--emerald-light); margin-bottom: 6px; }
 .stage__name { font: clamp(24px, 3vw, 32px)/1.2 var(--f-display); letter-spacing: .04em; margin-bottom: 14px; }
 .stage__text { color: var(--cream); max-width: 460px; margin: 0 auto; }
-.stage.is-changing .stage__img { animation: emblemIn .7s var(--ease); }
-.stage.is-changing .stage__name,
-.stage.is-changing .stage__num,
-.stage.is-changing .stage__text { animation: fadeUp .6s var(--ease) both; }
-.stage.is-changing .stage__text { animation-delay: .08s; }
 
 .picker { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .picker button {
@@ -406,12 +413,12 @@ p { margin: 0 0 1em; }
 
 /* ================= TIMELINE ================= */
 .timeline { list-style: none; margin: 0; padding: 0 0 0 34px; position: relative; }
-.timeline::before {
-  content: ""; position: absolute; left: 8px; top: 6px; bottom: 6px; width: 2px;
+/* Garis timeline — terisi mengikuti scroll (anime.js onScroll) */
+.timeline__line {
+  position: absolute; left: 8px; top: 6px; bottom: 6px; width: 2px;
   background: linear-gradient(var(--gold), var(--emerald), transparent);
-  transform-origin: top; transform: scaleY(0); transition: transform 1.6s var(--ease);
+  transform-origin: top;
 }
-.timeline.is-visible::before { transform: scaleY(1); }
 .moment { position: relative; padding: 0 0 32px; }
 .moment::before {
   content: ""; position: absolute; left: -32px; top: 6px; width: 14px; height: 14px; rotate: 45deg;
@@ -437,32 +444,14 @@ p { margin: 0 0 1em; }
 .footer p { color: var(--muted); font-size: 15px; }
 .footer__credit { margin-top: 28px; font-size: 13px !important; letter-spacing: .08em; }
 
-/* ================= SCROLL REVEAL ================= */
-.reveal { opacity: 0; transform: translateY(36px); transition: opacity 1s var(--ease), transform 1s var(--ease); transition-delay: var(--d, 0s); }
-.reveal.is-visible { opacity: 1; transform: none; }
-.reveal--zoom { transform: scale(.94); }
-.reveal--left { transform: translateX(-40px); }
-.reveal--right { transform: translateX(40px); }
-
-/* ================= KEYFRAMES ================= */
-@keyframes rise { from { opacity: 0; transform: translateY(40px) scale(.86); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+/* ================= KEYFRAMES (loop ringan: hanya transform/opacity) ================= */
 @keyframes pulse { 0%, 100% { opacity: .65; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
-@keyframes letters { from { letter-spacing: .6em; opacity: 0; filter: blur(6px); } to { letter-spacing: .12em; opacity: 1; filter: none; } }
-@keyframes write { from { clip-path: inset(0 100% 0 0); opacity: 0; } to { clip-path: inset(0 0 0 0); opacity: 1; } }
-@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-@keyframes draw { to { stroke-dashoffset: 0; } }
-@keyframes flow { 0%, 100% { stroke-dasharray: 1100 0; } 50% { stroke-dasharray: 900 200; } }
 @keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(.3) rotate(0); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
 @keyframes scrollDot { 0% { opacity: 0; transform: translateY(0); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(16px); } }
-@keyframes tick { from { transform: translateY(-40%); opacity: .2; } to { transform: none; opacity: 1; } }
-@keyframes emblemIn { from { opacity: 0; transform: scale(.7) rotate(-8deg); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 
-/* Hormati pengguna yang mematikan animasi */
+/* Hormati pengguna yang mematikan animasi (anime.js juga dimatikan di main.js) */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; transition-duration: .001ms !important; }
-  .vein { stroke-dashoffset: 0; }
-  .reveal { opacity: 1; transform: none; }
   html { scroll-behavior: auto; }
 }
