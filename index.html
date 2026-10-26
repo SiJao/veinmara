@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VEINMARA Generation</title>
+  <meta name="description" content="VEINMARA Generation — Angkatan Kelas Akhir 2026–2027 Pesantren Modern Daarul 'Uluum Lido. A Renewal Catalyst.">
+  <meta name="theme-color" content="#1c0509">
+  <link rel="icon" type="image/png" href="assets/web/logo-veinmara.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#filosofi">Lewati ke konten</a>
+
+  <header class="nav" id="nav">
+    <a class="nav__brand" href="#top" aria-label="VEINMARA — ke atas">
+      <img src="assets/web/logo-veinmara.png" alt="" width="40" height="40">
+      <span>Veinmara</span>
+    </a>
+    <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Buka menu">
+      <span></span><span></span>
+    </button>
+    <nav id="nav-menu" class="nav__menu">
+      <a href="#filosofi">Filosofi</a>
+      <a href="#logo">Makna Logo</a>
+      <a href="#pemimpin">Pemimpin</a>
+      <a href="#momen">Momen</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <svg class="veins veins--tl" viewBox="0 0 600 400" aria-hidden="true"><use href="#vein-set"/></svg>
+      <svg class="veins veins--br" viewBox="0 0 600 400" aria-hidden="true"><use href="#vein-set"/></svg>
+      <div class="sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+      <div class="hero__inner">
+        <p class="eyebrow">Kelas Akhir 2026 – 2027 · Pesantren Modern Daarul ‘Uluum Lido</p>
+        <div class="hero__logo">
+          <img src="assets/web/logo-veinmara.png" alt="Logo angkatan VEINMARA Generation" width="1000" height="1000" fetchpriority="high">
+        </div>
+        <h1 class="hero__title">
+          <span class="hero__name">Veinmara</span>
+          <span class="hero__gen">Generation</span>
+        </h1>
+        <p class="hero__motto">A Renewal Catalyst</p>
+        <p class="hero__motto-id">Pemantik Perubahan</p>
+
+        <div class="countdown" id="countdown" hidden>
+          <p class="countdown__label">Menuju Peresmian · <span id="cd-when"></span></p>
+          <div class="countdown__grid" role="timer" aria-live="off">
+            <div><b id="cd-d">0</b><span>Hari</span></div>
+            <div><b id="cd-h">0</b><span>Jam</span></div>
+            <div><b id="cd-m">0</b><span>Menit</span></div>
+            <div><b id="cd-s">0</b><span>Detik</span></div>
+          </div>
+        </div>
+        <p class="hero__done" id="cd-done" hidden>Telah diresmikan · 1 November 2026</p>
+      </div>
+      <a class="hero__scroll" href="#filosofi" aria-label="Gulir ke filosofi"><span></span></a>
+    </section>
+
+    <!-- ============ FILOSOFI NAMA ============ -->
+    <section class="section" id="filosofi">
+      <div class="container">
+        <header class="section__head">
+          <p class="eyebrow">Landasan Filosofis</p>
+          <h2>Makna di Balik Nama</h2>
+        </header>
+
+        <figure class="ayat">
+          <p class="ayat__ar" lang="ar" dir="rtl">فَإِنَّ مَعَ ٱلْعُسْرِ يُسْرًا ۝٥ إِنَّ مَعَ ٱلْعُسْرِ يُسْرًا ۝٦</p>
+          <figcaption>
+            <p class="ayat__id">“Karena sesungguhnya bersama kesulitan ada kemudahan, sesungguhnya bersama kesulitan ada kemudahan.”</p>
+            <cite>Q.S. Al-Insyirah: 5–6</cite>
+          </figcaption>
+        </figure>
+
+        <p class="lead">Ayat ini mengingatkan kita bahwa setiap kesulitan senantiasa disertai kemudahan. Pengulangan ayat menjadi penegasan bahwa kesulitan bukanlah akhir, melainkan bagian dari proses yang mengandung hikmah, pertolongan, dan jalan menuju kebaikan.</p>
+
+        <div class="split">
+          <article class="word word--vein">
+            <p class="word__label">Vein</p>
+            <h3>Nadi</h3>
+            <p>Pembuluh darah atau nadi — melambangkan dzikir, fikir, dan ayat-ayat Al-Qur’an yang terus mengalir dalam diri sebagai pedoman kehidupan. Nilai-nilai Al-Qur’an menjadi pegangan agar setiap langkah tetap terarah dan setiap ujian dihadapi dengan keyakinan kepada Allah.</p>
+          </article>
+          <span class="split__plus" aria-hidden="true">+</span>
+          <article class="word word--mara">
+            <p class="word__label">Mara</p>
+            <h3>Emerald</h3>
+            <p>Terinspirasi dari Emerald, permata hijau yang terbentuk melalui tekanan dan proses panjang di dalam inti bumi — melambangkan pertumbuhan dari titik nadir menuju puncak kemakmuran. Hijaunya merepresentasikan kehidupan, harapan, dan tanggung jawab menjaga bumi serta menebar kemaslahatan.</p>
+          </article>
+        </div>
+
+        <blockquote class="closing">
+          <p>VEINMARA Generation adalah generasi yang menjadikan <em>Al-Qur’an sebagai nadi</em>, menjadikan <em>kesulitan sebagai proses tempaan</em>, dan <em>kebersamaan sebagai kekuatan</em> untuk bertumbuh menjadi pribadi luhur, bernilai, serta bermanfaat bagi sesama dan semesta.</p>
+        </blockquote>
+
+        <div class="motto-card">
+          <p class="eyebrow">Semboyan</p>
+          <p class="motto-card__en">“A Renewal Catalyst”</p>
+          <p>Pemantik Perubahan. Mencerminkan tekad kami sebagai generasi yang tak hanya menempa diri untuk menjadi lebih baik, namun hadir sebagai garda penggerak menuju perubahan.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FILOSOFI LOGO ============ -->
+    <section class="section section--deep" id="logo">
+      <div class="container">
+        <header class="section__head">
+          <p class="eyebrow">Filosofi Logo</p>
+          <h2>Sebelas Unsur, Satu Identitas</h2>
+          <p class="section__sub">Pilih setiap unsur untuk membaca maknanya.</p>
+        </header>
+
+        <div class="logo-explorer">
+          <div class="stage" aria-live="polite">
+            <div class="stage__glow" aria-hidden="true"></div>
+            <img class="stage__img" id="stage-img" src="assets/web/emblem/kelopak.png" alt="">
+            <p class="stage__num" id="stage-num">01</p>
+            <h3 class="stage__name" id="stage-name">Kelopak Bunga</h3>
+            <p class="stage__text" id="stage-text"></p>
+          </div>
+          <ul class="picker" id="picker" role="list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PEMIMPIN ============ -->
+    <section class="section" id="pemimpin">
+      <div class="container">
+        <header class="section__head">
+          <p class="eyebrow">Struktur Angkatan</p>
+          <h2>Ketua &amp; Wakil Ketua Angkatan</h2>
+        </header>
+        <div class="units" id="units"></div>
+      </div>
+    </section>
+
+    <!-- ============ MOMEN ============ -->
+    <section class="section section--deep" id="momen">
+      <div class="container container--narrow">
+        <header class="section__head">
+          <p class="eyebrow">Jejak Perjalanan</p>
+          <h2>Momen Penting</h2>
+        </header>
+        <ol class="timeline" id="timeline"></ol>
+        <p class="timeline__more">Momen berikutnya akan terus dicatat di sini.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <svg class="veins veins--footer" viewBox="0 0 600 400" aria-hidden="true"><use href="#vein-set"/></svg>
+    <div class="container footer__inner">
+      <img src="assets/web/logo-veinmara.png" alt="" width="96" height="96" loading="lazy">
+      <p class="footer__name">Veinmara Generation</p>
+      <p class="footer__ar" lang="ar" dir="rtl">معهد دار العلوم ليدو العصري</p>
+      <p>Pesantren Modern Daarul ‘Uluum Lido<br>
+        Jln. HR. Edi Sukma KM.22 Muara Ciburuy, Cigombong, Bogor</p>
+      <p><a href="https://www.daarululuumlido.com" target="_blank" rel="noopener">daarululuumlido.com</a></p>
+      <p class="footer__credit">Dibuat oleh Divisi Visual &amp; Media · VEINMARA Generation</p>
+    </div>
+  </footer>
+
+  <!-- Garis "nadi" emas — dipakai ulang di hero & footer -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="gold-line" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#f6e2b0"/>
+        <stop offset=".45" stop-color="#c69856"/>
+        <stop offset="1" stop-color="#8a5a22"/>
+      </linearGradient>
+      <g id="vein-set" fill="none" stroke="url(#gold-line)" stroke-linecap="round">
+        <path class="vein" d="M-20 60 C120 40 160 160 300 140 S500 40 640 90"  stroke-width="2.2"/>
+        <path class="vein" d="M-20 85 C120 65 170 185 305 165 S505 65 640 115" stroke-width="1.4"/>
+        <path class="vein" d="M-20 110 C125 90 180 210 310 190 S510 90 640 140" stroke-width="1"/>
+        <path class="vein" d="M-20 135 C130 115 190 235 315 215 S515 115 640 165" stroke-width=".7"/>
+        <path class="vein vein--emerald" d="M-20 160 C135 140 200 260 320 240 S520 140 640 190" stroke-width=".9"/>
+      </g>
+    </defs>
+  </svg>
+
+  <script src="data.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

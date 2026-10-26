@@ -1,0 +1,7 @@
+# File asli besar & arsip internal — tidak di-push
+*.zip
+*.pdf
+*.psd
+konten/
+assets/*
+!assets/web/
