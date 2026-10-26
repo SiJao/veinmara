@@ -75,7 +75,7 @@
 
   picker.innerHTML = D.elemenLogo.map(function (el, i) {
     return '<li class="reveal" data-d="' + (i * 0.04) + '"><button type="button" data-i="' + i + '" aria-pressed="' + (i === 0) + '">' +
-      '<img src="' + EMBLEM + esc(el.gambar) + '" alt="" loading="lazy">' +
+      '<img src="' + EMBLEM + esc(el.gambar) + '" alt="" loading="lazy" decoding="async">' +
       '<span>' + esc(el.nama) + "</span></button></li>";
   }).join("");
 
@@ -127,7 +127,7 @@
         return '<figure class="person reveal" data-from="zoom" data-d="' + (0.2 + pi * 0.12) + '">' +
           '<div class="person__frame">' + (pi === 0 ? crown : "") +
           '<span class="person__initials" aria-hidden="true">' + esc(initials(p.nama)) + "</span>" +
-          '<img src="assets/web/foto/' + esc(p.foto) + '" alt="Foto ' + esc(p.nama) + '" loading="lazy" onerror="this.remove()">' +
+          '<img src="assets/web/foto/' + esc(p.foto) + '" alt="Foto ' + esc(p.nama) + '" loading="lazy" decoding="async" onerror="this.remove()">' +
           "</div><figcaption>" +
           '<p class="person__role">' + esc(p.jabatan) + "</p>" +
           '<p class="person__name">' + esc(p.nama) + "</p>" +
@@ -181,7 +181,11 @@
 
   // Setelah intro: logo melayang pelan + kilau gelombang di huruf VEINMARA
   intro.then(function () {
-    A.animate($("img", heroLogo), { y: [0, -12], duration: 3600, ease: "inOutSine", loop: true, alternate: true });
+    // loop terus-menerus → pakai waapi (compositor), tidak membebani thread utama
+    A.waapi.animate($("img", heroLogo), {
+      transform: ["translateY(0px)", "translateY(-12px)"],
+      duration: 3600, ease: "inOutSine", loop: true, alternate: true
+    });
     A.animate(chars, {
       y: [0, -7, 0], scale: [1, 1.04, 1],
       duration: 1000, delay: A.stagger(65), ease: "inOutSine",
@@ -246,25 +250,31 @@
     $$(r[0]).forEach(function (el) { el.classList.add("reveal"); if (!el.dataset.from) el.dataset.from = r[1]; });
   });
 
+  // Jarak gerak dibuat pendek & durasi lebih singkat agar terasa mengalun, bukan meloncat
   var FROM = {
-    up: { y: [28, 0] },
-    left: { x: [-36, 0] },
-    right: { x: [36, 0] },
-    zoom: { scale: [0.94, 1] }
+    up: ["translateY(18px)", "translateY(0px)"],
+    left: ["translateX(-24px)", "translateX(0px)"],
+    right: ["translateX(24px)", "translateX(0px)"],
+    zoom: ["scale(0.96)", "scale(1)"]
   };
-  function reveal(el) {
-    var params = Object.assign({
-      opacity: [0, 1], duration: 1100, delay: (parseFloat(el.dataset.d) || 0) * 1000, ease: "outQuart"
-    }, FROM[el.dataset.from] || FROM.up);
-    A.animate(el, params);
-    // kilau emas sekali lewat pada judul bagian
-    var h2 = el.matches(".section__head") && $("h2", el);
-    if (h2) A.animate(h2, { backgroundPosition: ["110% 0%", "-10% 0%"], duration: 2200, delay: 300, ease: "inOutSine" });
+  // anime.waapi = Web Animations API → transform/opacity dijalankan di thread compositor (GPU),
+  // jadi tetap halus walau browser sedang sibuk menggambar halaman saat di-scroll.
+  function reveal(el, order) {
+    el.classList.add("is-in"); // nilai akhir dipegang CSS setelah animasi selesai
+    A.waapi.animate(el, {
+      opacity: [0, 1],
+      transform: FROM[el.dataset.from] || FROM.up,
+      duration: 750,
+      delay: (parseFloat(el.dataset.d) || 0) * 1000 + order * 60,
+      ease: "outQuart"
+    });
   }
 
   var io = new IntersectionObserver(function (entries) {
+    // elemen yang masuk layar bersamaan dijalankan bergiliran, bukan sekaligus
+    var order = 0;
     entries.forEach(function (e) {
-      if (e.isIntersecting) { reveal(e.target); io.unobserve(e.target); }
+      if (e.isIntersecting) { reveal(e.target, order++); io.unobserve(e.target); }
     });
   }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
   $$(".reveal").forEach(function (el) { io.observe(el); });
