@@ -7,8 +7,8 @@
 window.VEINMARA = {
   peresmian: {
     // Waktu WIB (+07:00) — dipakai untuk hitung mundur di halaman utama
-    waktu: "2026-11-01T20:00:00+07:00",
-    tanggal: "Minggu, 1 November 2026",
+    waktu: "2026-11-08T20:00:00+07:00",
+    tanggal: "Minggu, 8 November 2026",
     jam: "20.00 WIB",
     tempat: "Aula Siti Hajar",
   },
@@ -67,7 +67,7 @@ window.VEINMARA = {
   // Momen penting — tambahkan momen baru di sini (paling lama di atas)
   momen: [
     {
-      tanggal: "1 November 2026",
+      tanggal: "8 November 2026",
       judul: "Peresmian Nama Angkatan VEINMARA Generation",
       tempat: "Aula Siti Hajar",
       isi: "Pengesahan nama, logo, dan simbol VEINMARA Generation sebagai identitas resmi angkatan, sekaligus pengenalan filosofinya kepada keluarga besar pesantren.",
