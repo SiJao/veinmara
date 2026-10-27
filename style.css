@@ -109,7 +109,10 @@ p { margin: 0 0 1em; }
 }
 .nav.is-scrolled .nav__brand { opacity: 1; transform: none; }
 .nav__brand img { width: 40px; height: 40px; }
-.nav__menu { display: flex; gap: 28px; }
+.nav__menu { display: flex; align-items: center; gap: 26px; }
+.nav__menu a[hidden] { display: none; }
+/* pemisah antara menu bagian beranda & menu halaman lain */
+.nav__sep { width: 1px; height: 16px; background: var(--line); }
 .nav__menu a {
   position: relative; text-decoration: none; color: var(--text);
   font-size: 14px; letter-spacing: .12em; text-transform: uppercase;
@@ -122,7 +125,8 @@ p { margin: 0 0 1em; }
 .nav__menu a.is-active { color: var(--gold-light); }
 .nav__toggle { display: none; }
 
-@media (max-width: 720px) {
+@media (max-width: 1060px) {
+  .nav__sep { width: auto; height: 1px; margin: 6px 12px; }
   .nav__toggle {
     display: grid; gap: 6px; place-content: center;
     width: 44px; height: 44px; background: none; border: 1px solid var(--line); border-radius: 12px; cursor: pointer;
@@ -131,7 +135,7 @@ p { margin: 0 0 1em; }
   .nav__toggle[aria-expanded="true"] span:first-child { transform: translateY(3.75px) rotate(45deg); }
   .nav__toggle[aria-expanded="true"] span:last-child { transform: translateY(-3.75px) rotate(-45deg); }
   .nav__menu {
-    position: fixed; inset: 64px 12px auto; flex-direction: column; gap: 0;
+    position: fixed; inset: 64px 12px auto; flex-direction: column; align-items: stretch; gap: 0;
     background: rgba(28, 5, 9, .96); border: 1px solid var(--line); border-radius: var(--radius);
     padding: 8px;
     opacity: 0; transform: translateY(-8px); pointer-events: none; transition: opacity .3s, transform .3s var(--ease);
@@ -428,6 +432,45 @@ p { margin: 0 0 1em; }
 .moment__place { font-size: 14px; color: var(--gold); margin-bottom: 10px; }
 .moment__card p:last-child { margin: 0; color: var(--muted); }
 .timeline__more { text-align: center; color: var(--muted); font-style: italic; font-size: 15px; margin: 8px 0 0; }
+
+/* ================= COMING SOON (undangan & panggung gembira) ================= */
+.soon {
+  position: relative; isolation: isolate; overflow: hidden;
+  min-height: 100svh; display: grid; place-items: center; text-align: center;
+  padding: 96px var(--gutter) 64px;
+  background:
+    radial-gradient(60% 45% at 50% 38%, rgba(138, 30, 41, .55), transparent 70%),
+    linear-gradient(180deg, var(--bg-2), var(--bg) 85%);
+}
+.soon__inner { max-width: 760px; display: grid; justify-items: center; }
+.soon__logo { width: min(150px, 34vw); margin-bottom: 18px; will-change: transform; }
+.soon__title {
+  font: clamp(40px, 9vw, 96px)/1.05 var(--f-display); letter-spacing: .06em; text-transform: uppercase;
+  background: linear-gradient(180deg, #f8e6b8 10%, #d9b06d 48%, #a8712c 72%, #e7c78b 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.soon__title span {
+  display: inline-block; background: inherit;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.soon__script { font: clamp(40px, 8vw, 76px)/1 var(--f-script); color: var(--cream); rotate: -4deg; margin: 2px 0 26px; }
+.soon__bar {
+  position: relative; overflow: hidden; width: min(280px, 70vw); height: 2px; border-radius: 2px;
+  background: var(--line); margin-bottom: 26px; transform-origin: center;
+}
+.soon__bar span {
+  position: absolute; inset: 0 auto 0 0; width: 34%;
+  background: linear-gradient(90deg, transparent, var(--gold-light), var(--emerald-light), transparent);
+  transform: translateX(-120%); will-change: transform;
+}
+.soon__msg { max-width: 520px; color: var(--muted); font-size: 17px; margin-bottom: 30px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px;
+  border: 1px solid var(--gold); color: var(--gold-light); text-decoration: none;
+  font: 600 13px var(--f-body); letter-spacing: .14em; text-transform: uppercase;
+  transition: background .3s, color .3s, transform .3s var(--ease);
+}
+.btn:hover { background: var(--gold); color: var(--bg); transform: translateY(-2px); }
 
 /* ================= FOOTER ================= */
 .footer {

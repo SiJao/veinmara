@@ -1,38 +1,46 @@
 # Web VEINMARA Generation
 
-Web statis angkatan Kelas Akhir 2026–2027, Pesantren Modern Daarul 'Uluum Lido.
-Tidak butuh server/database — cukup buka `index.html` di browser.
+Web angkatan Kelas Akhir 2026–2027, Pesantren Modern Daarul 'Uluum Lido.
+Halaman statis (tanpa server). Isi yang sering berubah diedit lewat **Control Panel** yang tersambung ke Firebase.
 
-## Struktur
+## Halaman
+
+| Halaman | Isi |
+|---|---|
+| `index.html` | Beranda: hitung mundur peresmian, filosofi nama & logo, ketua & wakil, momen penting |
+| `undangan.html` | Undangan — sementara *Coming Soon* |
+| `panggung-gembira.html` | Panggung Gembira — sementara *Coming Soon* |
+| `admin.html` | **Control Panel** (khusus admin, perlu login) |
+
+## Struktur file
 
 | File / folder | Isi |
 |---|---|
-| `index.html` | Kerangka halaman |
-| `style.css` | Tampilan & animasi |
-| `main.js` | Interaksi (hitung mundur, filosofi logo, animasi scroll) |
-| `data.js` | **Semua isi web** — ubah teks di sini saja |
+| `style.css`, `admin.css` | Tampilan web & control panel |
+| `fx.js` | Efek bersama: navigasi, garis nadi emas, titik cahaya |
+| `main.js` | Beranda (hitung mundur, filosofi logo, animasi scroll) |
+| `soon.js` | Halaman Coming Soon |
+| `admin.js` | Control panel (Firebase Auth + Firestore) |
+| `content.js` | Memuat isi online dari Firestore; kalau gagal pakai `data.js` |
+| `data.js` | **Isi bawaan** + filosofi logo (tidak diedit dari control panel) |
+| `firebase-config.js` | Kunci project Firebase — lihat **PANDUAN-FIREBASE.md** |
+| `firestore.rules` | Aturan keamanan database (ditempel di Firebase Console) |
+| `vendor/` | anime.js 4.5.0 (animasi) |
 | `assets/web/` | Gambar & font yang dipakai web (sudah dikecilkan) |
-| `assets/EMBLEM LOGO`, `LOGO ANGKATAN`, `FONT` | File asli dari Drive (besar, **jangan di-upload ke hosting**) |
-| `konten/` | Teks sumber + arsip internal (struktur lengkap) — **jangan di-upload** |
+| `assets/EMBLEM LOGO`, `LOGO ANGKATAN`, `FONT` | File asli dari Drive (besar, tidak di-push) |
+| `konten/` | Teks sumber + arsip internal (struktur lengkap) — tidak di-push |
 
-## Menambah foto ketua & wakil
+## Mengedit isi
 
-1. Siapkan foto potret **3:4** (±600×800 px), format `.jpg`, ukuran < 300 KB.
-2. Simpan di `assets/web/foto/` dengan nama:
-   `tmi-putra-ketua.jpg`, `tmi-putra-wakil.jpg`, `tmi-putri-ketua.jpg`, `tmi-putri-wakil.jpg`,
-   `tahfizh-putra-ketua.jpg`, `tahfizh-putra-wakil.jpg`, `tahfizh-putri-ketua.jpg`, `tahfizh-putri-wakil.jpg`
-3. Selama foto belum ada, web otomatis menampilkan inisial nama.
+Setelah Firebase disiapkan (**PANDUAN-FIREBASE.md**), semua ini diedit dari `admin.html`:
+tanggal/jam/tempat peresmian, halaman Undangan & Panggung Gembira, ketua & wakil (termasuk foto), dan momen penting.
 
-## Menambah momen penting
+Selama Firebase belum disiapkan, web memakai isi bawaan di `data.js` — foto ketua & wakil bisa ditaruh manual di
+`assets/web/foto/` (`tmi-putra-ketua.jpg`, `tmi-putra-wakil.jpg`, … `tahfizh-putri-wakil.jpg`, potret 3:4).
+Tanpa foto, web menampilkan inisial nama.
 
-Di `data.js`, tambahkan item baru pada `momen: [ ... ]` (tanggal, judul, tempat, isi).
+## Catatan
 
-## Upload ke hosting
-
-Yang di-upload cukup: `index.html`, `style.css`, `main.js`, `data.js`, dan folder `assets/web/`.
-
-## Catatan font
-
-- **Chocolatier** (judul) dan **Rosellinda Alyamore** (tulisan "Generation", "Vein", "Mara") berlisensi *Personal Use* — boleh untuk web non-komersial ini, **tidak boleh** dipakai untuk jualan/merchandise.
-- Rosellinda versi gratis menampilkan tulisan "WARNING" di tempat angka — jangan dipakai untuk teks yang berisi angka.
-- Teks isi memakai **Hanken Grotesk** dan ayat memakai **Amiri** (Google Fonts, gratis) — perlu internet; tanpa internet otomatis memakai font bawaan.
+- Control panel harus dibuka dari alamat online (GitHub Pages) atau server lokal (`npx serve`), **bukan** klik dua kali.
+- Kalau Windows/HP memakai pengaturan "kurangi gerakan" (Animation effects: Off), web sengaja tampil tanpa animasi.
+- **Font:** Chocolatier & Rosellinda Alyamore berlisensi *Personal Use* — boleh untuk web non-komersial ini, tidak untuk jualan/merchandise. Rosellinda versi gratis menampilkan "WARNING" di tempat angka — jangan dipakai untuk teks berangka. Teks isi memakai Hanken Grotesk & Amiri (Google Fonts).

@@ -1,0 +1,37 @@
+rules_version = '2';
+
+// Aturan keamanan Firestore untuk web VEINMARA.
+// Salin seluruh isi file ini ke Firebase Console → Firestore Database → Rules,
+// lalu ganti GANTI_DENGAN_UID_ADMIN dengan UID akun admin (lihat PANDUAN-FIREBASE.md).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == "GANTI_DENGAN_UID_ADMIN";
+    }
+
+    // Isi web (JSON) — semua orang boleh membaca, hanya admin yang boleh mengubah
+    match /site/{docId} {
+      allow read: if true;
+      allow write: if isAdmin()
+        && docId == "content"
+        && request.resource.data.json is string
+        && request.resource.data.json.size() < 200000;
+    }
+
+    // Foto ketua & wakil (JPEG base64) — maks ±400 KB per foto
+    match /foto/{fotoId} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.data is string
+        && request.resource.data.data.matches('^data:image/jpeg;base64,.*')
+        && request.resource.data.data.size() < 400000;
+      allow delete: if isAdmin();
+    }
+
+    // Selain itu: tertutup
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

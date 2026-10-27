@@ -1,6 +1,8 @@
 /*
- * DATA WEB VEINMARA
- * Semua isi web diatur dari file ini. Ubah teks di sini, tampilan ikut berubah.
+ * DATA BAWAAN WEB VEINMARA
+ * Isi ini dipakai kalau Firebase belum diatur / sedang tidak bisa dihubungi.
+ * Setelah Firebase aktif, bagian peresmian, halaman, pemimpin, dan momen
+ * diedit dari Control Panel (admin.html) — bukan dari file ini.
  * Sumber: konten/*.md (Naskah Pengesahan Nama 26, Proposal Peresmian).
  */
 
@@ -11,6 +13,20 @@ window.VEINMARA = {
     tanggal: "Minggu, 8 November 2026",
     jam: "20.00 WIB",
     tempat: "Aula Siti Hajar",
+  },
+
+  // Halaman tambahan — tampil:false menyembunyikan tautannya dari menu
+  halaman: {
+    undangan: {
+      tampil: true,
+      judul: "Undangan",
+      pesan: "Undangan resmi VEINMARA Generation sedang kami siapkan. Nantikan kabar selanjutnya.",
+    },
+    panggung: {
+      tampil: true,
+      judul: "Panggung Gembira",
+      pesan: "Panggung Gembira VEINMARA Generation sedang kami persiapkan. Sampai jumpa di panggung!",
+    },
   },
 
   // 11 elemen logo — urutan sesuai Naskah Pengesahan
