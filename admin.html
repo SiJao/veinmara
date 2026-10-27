@@ -20,16 +20,16 @@
       <span><b>Veinmara</b> Control Panel</span>
     </a>
     <div class="ad-user" id="ad-user" hidden>
-      <span id="ad-email"></span>
+      <span>Admin</span>
       <button type="button" class="ad-btn ad-btn--ghost" id="btn-logout">Keluar</button>
     </div>
   </header>
 
   <main class="ad-main">
-    <!-- Firebase belum diatur -->
+    <!-- Server/API belum siap -->
     <section class="ad-card ad-center" id="view-setup" hidden>
-      <h1>Firebase belum diatur</h1>
-      <p>Control panel butuh project Firebase. Ikuti langkah di <b>PANDUAN-FIREBASE.md</b>, lalu isi <code>firebase-config.js</code>.</p>
+      <h1>Server belum siap</h1>
+      <p id="setup-msg">Control panel butuh hosting PHP + MySQL (cPanel). Ikuti langkah di <b>PANDUAN-CPANEL.md</b>.</p>
       <p class="ad-muted">Sampai saat itu, web tetap tampil memakai isi bawaan dari <code>data.js</code>.</p>
     </section>
 
@@ -38,7 +38,7 @@
       <h1>Masuk</h1>
       <p class="ad-muted">Khusus admin VEINMARA.</p>
       <form id="form-login" class="ad-form">
-        <label>Email <input type="email" id="login-email" autocomplete="username" required></label>
+        <input type="text" name="username" value="admin" autocomplete="username" hidden>
         <label>Kata sandi <input type="password" id="login-pass" autocomplete="current-password" required></label>
         <button class="ad-btn" type="submit" id="btn-login">Masuk</button>
         <p class="ad-error" id="login-error" role="alert"></p>
@@ -91,7 +91,6 @@
 
   <!-- isi bawaan (dipakai saat database masih kosong) -->
   <script src="data.js"></script>
-  <script src="firebase-config.js"></script>
-  <script type="module" src="admin.js"></script>
+  <script src="admin.js"></script>
 </body>
 </html>

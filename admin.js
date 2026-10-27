@@ -1,99 +1,137 @@
 /*
  * Control Panel VEINMARA
- * - Login: Firebase Authentication (email + kata sandi)
- * - Data:  Firestore — dokumen site/content (JSON isi web) + koleksi foto/{id} (foto JPEG base64)
- * Hak menyimpan dijaga oleh firestore.rules (hanya UID admin).
+ * - Login: satu kata sandi admin (dicek di server, api/auth.php)
+ * - Data:  api/content.php (isi web, disimpan di MySQL) + api/foto.php (foto JPEG di uploads/foto)
+ * Setiap perubahan butuh sesi login + token CSRF.
  */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+(function () {
+  "use strict";
+  const DEFAULTS = window.VEINMARA;
+  const EDITABLE = ["peresmian", "halaman", "pemimpin", "momen"];
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const clone = (o) => JSON.parse(JSON.stringify(o));
 
-const CFG = window.VEINMARA_FIREBASE || {};
-const DEFAULTS = window.VEINMARA;
-const EDITABLE = ["peresmian", "halaman", "pemimpin", "momen"];
-const $ = (s, el = document) => el.querySelector(s);
-const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const clone = (o) => JSON.parse(JSON.stringify(o));
+  const views = { setup: $("#view-setup"), login: $("#view-login"), editor: $("#view-editor") };
+  function showView(name) { Object.entries(views).forEach(([k, el]) => (el.hidden = k !== name)); }
 
-const views = { setup: $("#view-setup"), login: $("#view-login"), editor: $("#view-editor") };
-function showView(name) { Object.entries(views).forEach(([k, el]) => (el.hidden = k !== name)); }
+  let toastTimer;
+  function toast(msg, isError) {
+    const t = $("#toast");
+    t.textContent = msg;
+    t.classList.toggle("is-error", !!isError);
+    t.classList.add("is-on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("is-on"), 3800);
+  }
 
-let toastTimer;
-function toast(msg, isError) {
-  const t = $("#toast");
-  t.textContent = msg;
-  t.classList.toggle("is-error", !!isError);
-  t.classList.add("is-on");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove("is-on"), 3800);
-}
-
-if (!CFG.apiKey || !CFG.projectId) {
-  showView("setup");
-} else {
-  start();
-}
-
-function start() {
-  const app = initializeApp(CFG);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  /* ---------- API ---------- */
+  let csrf = "";
+  async function api(path, payload) {
+    const opt = { credentials: "same-origin", cache: "no-store", headers: {} };
+    if (payload !== undefined) {
+      opt.method = "POST";
+      opt.headers["Content-Type"] = "application/json";
+      opt.headers["X-CSRF"] = csrf;
+      opt.body = JSON.stringify(payload);
+    }
+    let res, data;
+    try {
+      res = await fetch("api/" + path, opt);
+      data = await res.json();
+    } catch (e) {
+      const err = new Error("Server tidak merespons dengan benar.");
+      err.status = res ? res.status : 0;
+      throw err;
+    }
+    if (!res.ok || data.ok === false) {
+      const err = new Error(data.error || "HTTP " + res.status);
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  }
 
   let state = null;          // isi yang sedang diedit
-  let photos = {};           // id -> dataURL tersimpan
+  let photos = {};           // id -> url foto tersimpan
   let pendingPhotos = {};    // id -> dataURL baru | null (hapus)
   let dirty = false;
 
-  /* ---------- Login ---------- */
+  /* ---------- Mulai: cek server & status login ---------- */
+  (async function init() {
+    if (location.protocol === "file:") {
+      $("#setup-msg").innerHTML = "Control panel harus dibuka dari alamat web hosting (mis. <code>https://domainmu/admin.html</code>), bukan dengan klik dua kali.";
+      showView("setup");
+      return;
+    }
+    try {
+      const s = await api("auth.php");
+      csrf = s.csrf;
+      s.loggedIn ? enterEditor() : showView("login");
+    } catch (e) {
+      if (e.status === 503) $("#setup-msg").textContent = e.message;
+      showView("setup");
+    }
+  })();
+
+  /* ---------- Login / keluar ---------- */
   $("#form-login").addEventListener("submit", async (e) => {
     e.preventDefault();
     const btn = $("#btn-login");
     btn.disabled = true;
     $("#login-error").textContent = "";
     try {
-      await signInWithEmailAndPassword(auth, $("#login-email").value.trim(), $("#login-pass").value);
+      const r = await api("auth.php", { action: "login", password: $("#login-pass").value });
+      csrf = r.csrf;
+      $("#login-pass").value = "";
+      enterEditor();
     } catch (err) {
-      $("#login-error").textContent = /invalid|wrong|user-not-found|credential/i.test(err.code || "")
-        ? "Email atau kata sandi salah."
-        : "Gagal masuk: " + (err.code || err.message);
+      $("#login-error").textContent = err.message;
     } finally {
       btn.disabled = false;
     }
   });
-  $("#btn-logout").addEventListener("click", () => {
+  $("#btn-logout").addEventListener("click", async () => {
     if (dirty && !confirm("Ada perubahan yang belum disimpan. Tetap keluar?")) return;
-    signOut(auth);
+    try { await api("auth.php", { action: "logout" }); } catch (e) { /* tetap keluar */ }
+    location.reload();
   });
 
-  onAuthStateChanged(auth, async (user) => {
-    $("#ad-user").hidden = !user;
-    if (!user) { state = null; setDirty(false); showView("login"); return; }
-    $("#ad-email").textContent = user.email;
+  function enterEditor() {
+    $("#ad-user").hidden = false;
     showView("editor");
-    await loadAll();
-  });
+    loadAll();
+  }
+  // Sesi habis / ditolak → kembali ke layar login
+  function handleAuthError(err) {
+    if (err.status === 401 || err.status === 403) {
+      toast(err.message + " Perubahanmu masih ada di layar — masuk lagi lalu Simpan.", true);
+      $("#ad-user").hidden = true;
+      showView("login");
+      return true;
+    }
+    return false;
+  }
 
   /* ---------- Muat data ---------- */
   async function loadAll() {
     try {
-      const snap = await getDoc(doc(db, "site", "content"));
+      const res = await api("content.php");
       const base = {};
       EDITABLE.forEach((k) => (base[k] = clone(DEFAULTS[k])));
-      if (snap.exists() && snap.data().json) {
-        const remote = JSON.parse(snap.data().json);
-        EDITABLE.forEach((k) => { if (remote[k] != null) base[k] = remote[k]; });
+      if (res.content) {
+        EDITABLE.forEach((k) => { if (res.content[k] != null) base[k] = res.content[k]; });
       } else {
         toast("Database masih kosong — memakai isi bawaan. Tekan Simpan untuk menerbitkannya.");
         setDirty(true);
       }
-      state = base;
-      photos = {};
-      (await getDocs(collection(db, "foto"))).forEach((d) => { photos[d.id] = d.data().data; });
-      pendingPhotos = {};
+      // jangan timpa suntingan yang belum tersimpan (mis. setelah login ulang)
+      if (!state) state = base;
+      photos = res.fotos || {};
       renderAll();
     } catch (err) {
-      toast("Gagal memuat data: " + (err.code || err.message), true);
+      if (!handleAuthError(err)) toast("Gagal memuat data: " + err.message, true);
     }
   }
 
@@ -107,8 +145,7 @@ function start() {
   }
   function bindInputs(scope) {
     $$("[data-bind]", scope).forEach((el) => {
-      const path = el.dataset.bind;
-      const v = getPath(path);
+      const v = getPath(el.dataset.bind);
       if (el.type === "checkbox") el.checked = v !== false;
       else el.value = v ?? "";
     });
@@ -223,8 +260,7 @@ function start() {
     if (!input || !input.files[0]) return;
     const [ui, pi] = input.dataset.photo.split(".").map(Number);
     try {
-      const dataUrl = await toPortraitJpeg(input.files[0]);
-      pendingPhotos[photoId(state.pemimpin[ui].orang[pi])] = dataUrl;
+      pendingPhotos[photoId(state.pemimpin[ui].orang[pi])] = await toPortraitJpeg(input.files[0]);
       setDirty(true);
       renderPemimpin();
     } catch (err) {
@@ -322,39 +358,34 @@ function start() {
   /* ---------- Simpan ---------- */
   $("#btn-save").addEventListener("click", async () => {
     if (!state) return;
-    const empty = state.momen.findIndex((m) => !m.judul.trim());
+    const empty = state.momen.findIndex((m) => !String(m.judul || "").trim());
     if (empty >= 0) { toast(`Momen ${empty + 1} belum punya judul.`, true); return; }
 
     const btn = $("#btn-save");
     btn.disabled = true;
     $("#save-status").textContent = "Menyimpan…";
     try {
-      const payload = {};
-      EDITABLE.forEach((k) => (payload[k] = state[k]));
-      await setDoc(doc(db, "site", "content"), {
-        json: JSON.stringify(payload),
-        updatedAt: serverTimestamp(),
-        updatedBy: auth.currentUser.email,
-      });
+      const content = {};
+      EDITABLE.forEach((k) => (content[k] = state[k]));
+      await api("content.php", { content });
       for (const [id, data] of Object.entries(pendingPhotos)) {
         if (data) {
-          await setDoc(doc(db, "foto", id), { data, updatedAt: serverTimestamp() });
-          photos[id] = data;
+          const r = await api("foto.php", { id, data });
+          photos[id] = r.url;
         } else {
-          await deleteDoc(doc(db, "foto", id));
+          await api("foto.php", { id, hapus: true });
           delete photos[id];
         }
+        delete pendingPhotos[id];
       }
-      pendingPhotos = {};
       setDirty(false);
+      renderPemimpin();
       toast("Tersimpan. Web sudah memakai isi terbaru.");
     } catch (err) {
       $("#save-status").textContent = "Gagal menyimpan";
-      toast(err.code === "permission-denied"
-        ? "Ditolak: akun ini bukan admin (cek UID di aturan Firestore)."
-        : "Gagal menyimpan: " + (err.code || err.message), true);
+      if (!handleAuthError(err)) toast("Gagal menyimpan: " + err.message, true);
     } finally {
       btn.disabled = false;
     }
   });
-}
+})();

@@ -393,7 +393,8 @@ p { margin: 0 0 1em; }
   opacity: .55; transition: opacity .4s;
 }
 .person:hover .person__frame::before { opacity: 1; animation: shimmer 2.5s linear infinite; }
-.person__frame img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
+/* foto menutupi inisial (inisial hanya terlihat kalau foto belum ada) */
+.person__frame img { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
 .person:hover .person__frame img { transform: scale(1.06); }
 .person__initials {
   position: absolute; inset: 0; display: grid; place-items: center;

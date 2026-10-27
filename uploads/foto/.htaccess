@@ -1,0 +1,8 @@
+# Folder foto: hanya gambar JPEG yang boleh dibuka, tidak ada skrip yang dijalankan
+Options -Indexes
+<FilesMatch ".*">
+    Require all denied
+</FilesMatch>
+<FilesMatch "\.jpg$">
+    Require all granted
+</FilesMatch>

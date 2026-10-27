@@ -1,69 +1,48 @@
 /*
  * Pemuat isi web.
- * Isi bawaan ada di data.js. Kalau Firebase sudah dikonfigurasi, isi yang diedit
- * dari control panel (Firestore) menimpa bawaan itu.
- *
- * Pengunjung membaca lewat Firestore REST API (cukup fetch, tanpa SDK besar),
- * dengan batas waktu — kalau lambat/gagal, web tetap tampil dengan isi bawaan.
+ * Isi bawaan ada di data.js. Kalau web berjalan di hosting (cPanel) dan admin sudah
+ * menyimpan sesuatu lewat Control Panel, isi dari api/content.php menimpa bawaan itu.
+ * Kalau API lambat/tidak ada (mis. dibuka dengan klik dua kali), web tetap tampil
+ * memakai isi bawaan.
  */
 (function () {
   "use strict";
-  var CFG = window.VEINMARA_FIREBASE || {};
   var TIMEOUT = 3500;
   var EDITABLE = ["peresmian", "halaman", "pemimpin", "momen"];
 
-  function ready() { return !!(CFG.apiKey && CFG.projectId); }
-
-  function base() {
-    return "https://firestore.googleapis.com/v1/projects/" + encodeURIComponent(CFG.projectId) +
-      "/databases/(default)/documents/";
-  }
-
-  function getJSON(url) {
-    var ctrl = "AbortController" in window ? new AbortController() : null;
-    var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, TIMEOUT);
-    return fetch(url, { signal: ctrl ? ctrl.signal : undefined, cache: "no-store" })
-      .then(function (r) { clearTimeout(t); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
-  }
-
-  // Hanya foto JPEG/PNG/WebP base64 yang diterima (mencegah isi aneh masuk ke atribut src)
-  function safeImage(s) {
-    return typeof s === "string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(s) ? s : "";
+  // Hanya path foto dari folder uploads yang diterima
+  function safePhoto(s) {
+    return typeof s === "string" && /^uploads\/foto\/[a-z0-9-]+\.jpg(\?v=\d+)?$/.test(s) ? s : "";
   }
 
   function load() {
     var D = window.VEINMARA;
-    if (!ready()) return Promise.resolve(D);
-    var key = "?key=" + encodeURIComponent(CFG.apiKey);
+    if (location.protocol === "file:") return Promise.resolve(D);
 
-    var content = getJSON(base() + "site/content" + key).then(function (doc) {
-      var json = doc && doc.fields && doc.fields.json && doc.fields.json.stringValue;
-      if (!json) return;
-      var remote = JSON.parse(json);
-      EDITABLE.forEach(function (k) { if (remote[k] != null) D[k] = remote[k]; });
-    }).catch(function (e) { console.warn("[veinmara] isi online tidak termuat, pakai bawaan:", e.message); });
+    var ctrl = "AbortController" in window ? new AbortController() : null;
+    var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, TIMEOUT);
 
-    var photos = getJSON(base() + "foto" + key + "&pageSize=50").then(function (res) {
-      var map = {};
-      (res.documents || []).forEach(function (doc) {
-        var id = doc.name.split("/").pop();
-        var data = safeImage(doc.fields && doc.fields.data && doc.fields.data.stringValue);
-        if (data) map[id] = data;
-      });
-      return map;
-    }).catch(function () { return {}; });
-
-    return Promise.all([content, photos]).then(function (r) {
-      var map = r[1];
-      (D.pemimpin || []).forEach(function (u) {
-        (u.orang || []).forEach(function (p) {
-          var id = String(p.foto || "").replace(/\.\w+$/, "");
-          if (map[id]) p.fotoData = map[id];
+    return fetch("api/content.php", { signal: ctrl ? ctrl.signal : undefined, cache: "no-store", credentials: "same-origin" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function (res) {
+        clearTimeout(t);
+        if (res.content) EDITABLE.forEach(function (k) { if (res.content[k] != null) D[k] = res.content[k]; });
+        var fotos = res.fotos || {};
+        (D.pemimpin || []).forEach(function (u) {
+          (u.orang || []).forEach(function (p) {
+            var id = String(p.foto || "").replace(/\.\w+$/, "");
+            var url = safePhoto(fotos[id]);
+            if (url) p.fotoData = url;
+          });
         });
+        return D;
+      })
+      .catch(function (e) {
+        clearTimeout(t);
+        console.warn("[veinmara] isi online tidak termuat, pakai bawaan:", e.message);
+        return D;
       });
-      return D;
-    });
   }
 
-  window.VeinmaraContent = { load: load, ready: ready, EDITABLE: EDITABLE };
+  window.VeinmaraContent = { load: load, EDITABLE: EDITABLE };
 })();
