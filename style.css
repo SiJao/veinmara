@@ -231,7 +231,9 @@ p { margin: 0 0 1em; }
   background: radial-gradient(circle, #f0fff8 0 12%, rgba(116, 224, 179, .85) 26%, rgba(31, 143, 104, 0) 70%);
 }
 
-/* Kilau */
+/* Kilau — pembungkus harus absolute, kalau tidak ia jadi baris grid kosong
+   di .hero/.soon dan mendorong konten ke bawah dari tengah layar */
+.sparkles { position: absolute; inset: 0; pointer-events: none; }
 .sparkles i {
   position: absolute; z-index: -1; width: 4px; height: 4px; border-radius: 50%;
   background: #fff4d6; box-shadow: 0 0 12px 3px rgba(246, 226, 176, .8);
