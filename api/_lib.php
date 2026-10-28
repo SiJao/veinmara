@@ -30,7 +30,9 @@ function config(): array {
     for ($up = 2; $up <= 4; $up++) $candidates[] = dirname(__DIR__, $up) . '/veinmara-config.php';
     $candidates[] = __DIR__ . '/config.php';
     foreach ($candidates as $f) {
-        if ($f !== '' && is_file($f)) { $cfg = require $f; return $cfg; }
+        // @: hosting dengan open_basedir bisa mengeluarkan warning untuk folder di luar home,
+        // dan warning itu akan merusak keluaran JSON
+        if ($f !== '' && @is_file($f)) { $cfg = require $f; return $cfg; }
     }
     fail(503, 'Konfigurasi server belum dibuat (lihat PANDUAN-CPANEL.md).');
 }
