@@ -39,10 +39,19 @@
     let res, data;
     try {
       res = await fetch("api/" + path, opt);
+    } catch (e) {
+      const err = new Error("Tidak bisa menghubungi server. Periksa koneksi internet.");
+      err.status = 0;
+      throw err;
+    }
+    try {
       data = await res.json();
     } catch (e) {
-      const err = new Error("Server tidak merespons dengan benar.");
-      err.status = res ? res.status : 0;
+      // Bukan JSON: biasanya file api/ belum terunggah (404), error PHP (500), atau diblokir hosting (403)
+      const err = new Error(res.ok
+        ? "Server membalas dengan data yang bukan JSON — PHP kemungkinan tidak aktif di hosting ini (atau halaman ini tidak dibuka dari hosting PHP/cPanel)."
+        : "Server tidak merespons dengan benar (HTTP " + res.status + ").");
+      err.status = res.status;
       throw err;
     }
     if (!res.ok || data.ok === false) {
@@ -70,7 +79,7 @@
       csrf = s.csrf;
       s.loggedIn ? enterEditor() : showView("login");
     } catch (e) {
-      if (e.status === 503) $("#setup-msg").textContent = e.message;
+      $("#setup-msg").textContent = e.message + " Lihat bagian \"Kalau ada masalah\" di PANDUAN-CPANEL.md.";
       showView("setup");
     }
   })();
