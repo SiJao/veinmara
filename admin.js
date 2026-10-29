@@ -2,6 +2,7 @@
  * Control Panel VEINMARA
  * - Login: satu kata sandi admin (dicek di server, api/auth.php)
  * - Data:  api/content.php (isi web, disimpan di MySQL) + api/foto.php (foto JPEG di uploads/foto)
+ * - Artikel & dokumentasi: admin-entri.js
  * Setiap perubahan butuh sesi login + token CSRF.
  */
 (function () {
@@ -62,6 +63,11 @@
     return data;
   }
 
+  // Dipakai modul artikel & dokumentasi (admin-entri.js)
+  const dirtyChecks = [() => dirty];
+  const anyDirty = () => dirtyChecks.some((f) => f());
+  window.VMAdmin = { api, toast, esc, $, $$, handleAuthError: (e) => handleAuthError(e), dirtyChecks };
+
   let state = null;          // isi yang sedang diedit
   let photos = {};           // id -> url foto tersimpan
   let pendingPhotos = {};    // id -> dataURL baru | null (hapus)
@@ -102,7 +108,7 @@
     }
   });
   $("#btn-logout").addEventListener("click", async () => {
-    if (dirty && !confirm("Ada perubahan yang belum disimpan. Tetap keluar?")) return;
+    if (anyDirty() && !confirm("Ada perubahan yang belum disimpan. Tetap keluar?")) return;
     try { await api("auth.php", { action: "logout" }); } catch (e) { /* tetap keluar */ }
     location.reload();
   });
@@ -111,6 +117,7 @@
     $("#ad-user").hidden = false;
     showView("editor");
     loadAll();
+    document.dispatchEvent(new Event("vm:editor"));
   }
   // Sesi habis / ditolak → kembali ke layar login
   function handleAuthError(err) {
@@ -172,7 +179,7 @@
     $("#savebar").hidden = !v;
     $("#save-status").textContent = "Ada perubahan yang belum disimpan";
   }
-  window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+  window.addEventListener("beforeunload", (e) => { if (anyDirty()) { e.preventDefault(); e.returnValue = ""; } });
 
   /* ---------- Tab ---------- */
   $(".ad-tabs").addEventListener("click", (e) => {
@@ -212,15 +219,18 @@
   }
 
   /* ---------- Halaman ---------- */
-  const HALAMAN = [["undangan", "Undangan", "undangan.html"], ["panggung", "Panggung Gembira", "panggung-gembira.html"]];
+  // [kunci, label, file, punya tautan di menu?] — undangan tidak di menu, dibagikan lewat link
+  const HALAMAN = [["undangan", "Undangan", "undangan.html", false], ["panggung", "Panggung Gembira", "panggung-gembira.html", true]];
   function renderHalaman() {
-    $("#halaman-list").innerHTML = HALAMAN.map(([key, label, file]) => `
+    $("#halaman-list").innerHTML = HALAMAN.map(([key, label, file, menu]) => `
       <div class="ad-card">
         <div class="ad-row">
           <h2>${esc(label)}</h2>
-          <span class="ad-badge">Coming Soon</span>
+          <span class="ad-badge">${menu ? "Coming Soon" : "Khusus tamu"}</span>
         </div>
-        <label class="ad-switch"><input type="checkbox" data-bind="halaman.${key}.tampil"> Tampilkan tautan di menu</label>
+        ${menu
+          ? `<label class="ad-switch"><input type="checkbox" data-bind="halaman.${key}.tampil"> Tampilkan tautan di menu</label>`
+          : `<p class="ad-muted">Tidak tampil di menu. Bagikan link <code>${file}</code>; tamu masuk dengan akun Google sekolah (atur daftarnya di tab Undangan). Pesan di bawah tampil setelah tamu masuk.</p>`}
         <div class="ad-grid">
           <label>Judul halaman <input type="text" data-bind="halaman.${key}.judul" maxlength="40"></label>
           <label class="ad-span">Pesan <textarea rows="3" data-bind="halaman.${key}.pesan" maxlength="300"></textarea></label>

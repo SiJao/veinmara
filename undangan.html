@@ -26,6 +26,8 @@
     </button>
     <nav id="nav-menu" class="nav__menu">
       <a href="index.html">Beranda</a>
+      <a href="artikel.html">Artikel</a>
+      <a href="dokumentasi.html">Dokumentasi</a>
       <a href="undangan.html" data-halaman="undangan" class="is-active" aria-current="page">Undangan</a>
       <a href="panggung-gembira.html" data-halaman="panggung">Panggung Gembira</a>
     </nav>
@@ -42,7 +44,22 @@
       <h1 class="soon__title" id="soon-title" data-intro>Undangan</h1>
       <p class="soon__script" data-intro>Coming Soon</p>
       <div class="soon__bar" data-intro aria-hidden="true"><span></span></div>
-      <p class="soon__msg" id="soon-msg" data-intro></p>
+      <!-- Undangan khusus tamu terdaftar: masuk dengan akun Google sekolah (undangan.js) -->
+      <div class="invite" id="invite" data-intro aria-live="polite">
+        <p class="invite__wait" id="inv-wait">Memeriksa…</p>
+        <div id="inv-login" hidden>
+          <p class="soon__msg">Undangan ini khusus untuk nama yang terdaftar.<br>Silakan masuk dengan akun <b id="inv-domain">@daarululuumlido.com</b>.</p>
+          <div class="invite__gsi" id="inv-gsi"></div>
+          <p class="invite__error" id="inv-error" role="alert"></p>
+        </div>
+        <div class="invite__card" id="inv-card" hidden>
+          <p class="invite__to">Kepada Yth.</p>
+          <p class="invite__name" id="inv-nama"></p>
+          <p class="invite__ket" id="inv-ket"></p>
+          <p class="soon__msg" id="soon-msg"></p>
+          <p class="invite__who">Masuk sebagai <span id="inv-email"></span> · <button type="button" id="inv-keluar">Keluar</button></p>
+        </div>
+      </div>
       <a class="btn" href="index.html" data-intro>← Kembali ke Beranda</a>
     </div>
   </main>
@@ -52,5 +69,6 @@
   <script src="content.js"></script>
   <script src="fx.js"></script>
   <script src="soon.js"></script>
+  <script src="undangan.js"></script>
 </body>
 </html>

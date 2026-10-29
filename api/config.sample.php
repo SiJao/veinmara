@@ -19,4 +19,9 @@ return [
 
     // (Opsional, lebih aman) ganti baris di atas dengan hash bcrypt:
     // 'admin_password_hash' => '$2y$10$....',
+
+    // Undangan: login Google khusus akun sekolah. Client ID dari Google Cloud Console
+    // (lihat PANDUAN-CPANEL.md bagian "Undangan"). Kosong = halaman undangan belum bisa login.
+    'google_client_id' => '',
+    'undangan_domain' => 'daarululuumlido.com',
 ];

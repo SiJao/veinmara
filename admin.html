@@ -52,6 +52,9 @@
         <button type="button" role="tab" data-tab="halaman" aria-selected="false">Halaman</button>
         <button type="button" role="tab" data-tab="pemimpin" aria-selected="false">Ketua &amp; Wakil</button>
         <button type="button" role="tab" data-tab="momen" aria-selected="false">Momen Penting</button>
+        <button type="button" role="tab" data-tab="artikel" aria-selected="false">Artikel</button>
+        <button type="button" role="tab" data-tab="album" aria-selected="false">Dokumentasi</button>
+        <button type="button" role="tab" data-tab="tamu" aria-selected="false">Undangan</button>
       </nav>
 
       <div class="ad-panel" data-panel="acara">
@@ -79,6 +82,60 @@
         <div id="momen-list"></div>
         <button type="button" class="ad-btn ad-btn--ghost" id="btn-add-momen">+ Tambah momen</button>
       </div>
+
+      <!-- Artikel & dokumentasi: disimpan per entri (tombol Simpan sendiri), diisi oleh admin-entri.js -->
+      <div class="ad-panel" data-panel="artikel" hidden>
+        <div data-entri="artikel"></div>
+      </div>
+      <div class="ad-panel" data-panel="album" hidden>
+        <p class="ad-muted ad-note">Foto dokumentasi bisa dilihat siapa saja. Pilih foto yang pantas dan tidak mempermalukan siapa pun.
+          Foto otomatis dikecilkan (±250 KB) dan data lokasi/kamera di dalam foto ikut terhapus.</p>
+        <div data-entri="album"></div>
+      </div>
+
+      <!-- Daftar undangan (admin-tamu.js) — disimpan langsung per aksi -->
+      <div class="ad-panel" data-panel="tamu" hidden>
+        <div class="ad-card">
+          <div class="ad-row">
+            <h2>Login Google</h2>
+            <button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" id="tamu-cek">Cek koneksi</button>
+          </div>
+          <p class="ad-muted" id="tamu-status">Memuat…</p>
+          <ul class="ad-checks" id="tamu-cek-hasil" hidden></ul>
+        </div>
+
+        <form class="ad-card" id="tamu-form">
+          <h2 id="tamu-form-judul">Tambah tamu</h2>
+          <div class="ad-grid">
+            <label>Email <input type="email" name="email" required placeholder="nis@daarululuumlido.com" autocomplete="off"></label>
+            <label>Nama (tampil di undangan) <input type="text" name="nama" required maxlength="120"></label>
+            <label class="ad-span">Keterangan <span class="ad-hint">— opsional, mis. kelas atau jabatan</span><input type="text" name="keterangan" maxlength="120"></label>
+          </div>
+          <div class="ad-row ad-row--end">
+            <button type="button" class="ad-btn ad-btn--ghost" id="tamu-batal" hidden>Batal</button>
+            <button type="submit" class="ad-btn">Simpan tamu</button>
+          </div>
+        </form>
+
+        <details class="ad-card ad-import">
+          <summary><h2>Impor banyak sekaligus (CSV)</h2></summary>
+          <p class="ad-muted">Satu tamu per baris: <code>email,nama,keterangan</code>. Bisa ditempel dari Google Sheets/Excel (kolom dipisah tab) atau pilih file .csv. Email yang sudah ada akan diperbarui.</p>
+          <textarea id="tamu-csv" rows="6" placeholder="216326@daarululuumlido.com,Jao Hong Khai,Kelas 6"></textarea>
+          <div class="ad-row">
+            <label class="ad-btn ad-btn--ghost ad-btn--sm">Pilih file .csv<input type="file" accept=".csv,text/csv,text/plain" hidden id="tamu-file"></label>
+            <button type="button" class="ad-btn" id="tamu-impor">Impor</button>
+          </div>
+          <p class="ad-muted" id="tamu-impor-hasil"></p>
+        </details>
+
+        <div class="ad-card">
+          <div class="ad-row">
+            <h2>Daftar undangan <span class="ad-muted" id="tamu-jumlah"></span></h2>
+            <input type="text" id="tamu-cari" placeholder="Cari nama/email…" class="ad-search">
+          </div>
+          <div class="ad-table-wrap"><table class="ad-table" id="tamu-tabel"></table></div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -92,5 +149,8 @@
   <!-- isi bawaan (dipakai saat database masih kosong) -->
   <script src="data.js"></script>
   <script src="admin.js"></script>
+  <script src="rich.js"></script>
+  <script src="admin-entri.js"></script>
+  <script src="admin-tamu.js"></script>
 </body>
 </html>

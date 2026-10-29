@@ -120,8 +120,64 @@
     });
   }
 
+  /* ---------- Muncul saat di-scroll ---------- */
+  // Jarak gerak pendek & durasi singkat agar terasa mengalun, bukan meloncat
+  var FROM = {
+    up: ["translateY(18px)", "translateY(0px)"],
+    left: ["translateX(-24px)", "translateX(0px)"],
+    right: ["translateX(24px)", "translateX(0px)"],
+    zoom: ["scale(0.96)", "scale(1)"]
+  };
+  var revealIO = null;
+  function revealOnScroll(els) {
+    if (!MOTION) return;
+    // anime.waapi = Web Animations API → transform/opacity dijalankan di thread compositor (GPU)
+    function reveal(el, order) {
+      el.classList.add("is-in"); // nilai akhir dipegang CSS setelah animasi selesai
+      A.waapi.animate(el, {
+        opacity: [0, 1],
+        transform: FROM[el.dataset.from] || FROM.up,
+        duration: 750,
+        delay: (parseFloat(el.dataset.d) || 0) * 1000 + order * 60,
+        ease: "outQuart"
+      });
+    }
+    revealIO = revealIO || new IntersectionObserver(function (entries) {
+      // elemen yang masuk layar bersamaan dijalankan bergiliran, bukan sekaligus
+      var order = 0;
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { reveal(e.target, order++); revealIO.unobserve(e.target); }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
+    els.forEach(function (el) { revealIO.observe(el); });
+  }
+
+  // Judul halaman Artikel/Dokumentasi muncul bergiliran
+  function introPage() {
+    var els = $$(".page-head [data-intro]");
+    if (!MOTION) return;
+    A.createTimeline({ defaults: { ease: "outExpo" }, delay: 80 })
+      .add(els, { opacity: [0, 1], y: [18, 0], duration: 1000, delay: A.stagger(120) });
+  }
+
+  /* ---------- Kartu artikel & album (beranda + halaman daftar) ---------- */
+  var C = function () { return window.VeinmaraContent; };
+  function cardArtikel(a, i) {
+    return '<a class="post reveal" data-d="' + (i % 3) * 0.1 + '" href="artikel.html?id=' + encodeURIComponent(a.id) + '">' +
+      '<div class="post__img">' + (a.sampul ? '<img src="' + esc(a.sampul) + '" alt="" loading="lazy" decoding="async">' : '<span aria-hidden="true">V</span>') + "</div>" +
+      '<div class="post__body"><p class="post__date">' + esc(C().tanggal(a.tanggal)) + "</p>" +
+      "<h3>" + esc(a.judul) + "</h3>" + (a.ringkasan ? "<p>" + esc(a.ringkasan) + "</p>" : "") + "</div></a>";
+  }
+  function cardAlbum(a, i) {
+    return '<a class="album reveal" data-from="zoom" data-d="' + (i % 3) * 0.1 + '" href="dokumentasi.html?id=' + encodeURIComponent(a.id) + '">' +
+      '<div class="album__img">' + (a.sampul ? '<img src="' + esc(a.sampul) + '" alt="" loading="lazy" decoding="async">' : "") +
+      '<span class="album__count">' + a.jumlah + " foto</span></div>" +
+      '<p class="post__date">' + esc(C().tanggal(a.tanggal)) + "</p><h3>" + esc(a.judul) + "</h3></a>";
+  }
+
   window.VeinmaraFX = {
     A: A, MOTION: MOTION, $: $, $$: $$, esc: esc,
-    initNav: initNav, initVeins: initVeins, applyPageLinks: applyPageLinks
+    initNav: initNav, initVeins: initVeins, applyPageLinks: applyPageLinks,
+    revealOnScroll: revealOnScroll, introPage: introPage, cardArtikel: cardArtikel, cardAlbum: cardAlbum
   };
 })();

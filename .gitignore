@@ -6,8 +6,10 @@ konten/
 assets/*
 !assets/web/
 
-# Konfigurasi server (berisi password) & foto yang diunggah — hanya ada di hosting
+# Konfigurasi server (berisi password) & gambar yang diunggah — hanya ada di hosting
 veinmara-config.php
 api/config.php
 uploads/foto/*
 !uploads/foto/.htaccess
+uploads/artikel/
+uploads/album/

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Artikel · VEINMARA Generation</title>
+  <meta name="description" content="Artikel dan kabar terbaru VEINMARA Generation — Pesantren Modern Daarul 'Uluum Lido.">
+  <meta name="theme-color" content="#1c0509">
+  <link rel="icon" type="image/png" href="assets/web/logo-veinmara.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("anim");
+  </script>
+</head>
+<body>
+  <header class="nav" id="nav">
+    <a class="nav__brand" href="index.html" aria-label="VEINMARA — beranda">
+      <img src="assets/web/logo-veinmara.png" alt="" width="40" height="40">
+      <span>Veinmara</span>
+    </a>
+    <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Buka menu">
+      <span></span><span></span>
+    </button>
+    <nav id="nav-menu" class="nav__menu">
+      <a href="index.html">Beranda</a>
+      <a href="artikel.html" class="is-active" aria-current="page">Artikel</a>
+      <a href="dokumentasi.html">Dokumentasi</a>
+      <a href="panggung-gembira.html" data-halaman="panggung">Panggung Gembira</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="page-head">
+      <svg class="veins veins--tl" viewBox="0 0 600 400" aria-hidden="true"></svg>
+      <svg class="veins veins--br" viewBox="0 0 600 400" aria-hidden="true"></svg>
+      <div class="page-head__inner">
+        <p class="eyebrow" id="page-eyebrow" data-intro>Kabar Angkatan</p>
+        <h1 class="page-title" id="page-title" data-intro>Artikel</h1>
+        <p class="page-sub" id="page-sub" data-intro></p>
+      </div>
+    </section>
+
+    <section class="page-body">
+      <div class="container" id="page-body" aria-live="polite">
+        <p class="page-empty">Memuat…</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer footer--slim">
+    <div class="container footer__inner">
+      <p class="footer__name">Veinmara Generation</p>
+      <p>Pesantren Modern Daarul ‘Uluum Lido · <a href="https://www.daarululuumlido.com" target="_blank" rel="noopener">daarululuumlido.com</a></p>
+    </div>
+  </footer>
+
+  <script src="vendor/anime-4.5.0.umd.min.js"></script>
+  <script src="data.js"></script>
+  <script src="content.js"></script>
+  <script src="rich.js"></script>
+  <script src="fx.js"></script>
+  <script src="artikel.js"></script>
+</body>
+</html>

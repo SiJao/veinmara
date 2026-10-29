@@ -8,10 +8,21 @@
   FX.initVeins();
 
   // Tunggu isi (online dari control panel, atau bawaan data.js), baru tampilkan
-  window.VeinmaraContent.load().then(start);
+  var C = window.VeinmaraContent;
+  Promise.all([C.load(), C.list("artikel", 3), C.list("album", 3)]).then(function (r) { start(r[0], r[1], r[2]); });
 
-  function start(D) {
+  function start(D, artikel, album) {
     FX.applyPageLinks(D);
+
+    /* ---------- Artikel & dokumentasi terbaru (bagian disembunyikan kalau kosong) ---------- */
+    if (artikel.length) {
+      $("#artikel-list").innerHTML = artikel.map(FX.cardArtikel).join("");
+      $("#artikel").hidden = false;
+    }
+    if (album.length) {
+      $("#album-list").innerHTML = album.map(FX.cardAlbum).join("");
+      $("#dokumentasi").hidden = false;
+    }
 
     /* ---------- Hitung mundur peresmian ---------- */
     var target = new Date(D.peresmian.waktu).getTime();
@@ -171,38 +182,11 @@
       [".section__head", "up"], [".ayat", "zoom"], [".lead", "up"],
       [".word--vein", "left"], [".split__plus", "zoom"], [".word--mara", "right"],
       [".closing", "up"], [".motto-card", "zoom"], [".stage", "left"],
-      [".timeline__more", "up"], [".footer__inner", "up"]
+      [".timeline__more", "up"], [".section__more", "up"], [".footer__inner", "up"]
     ].forEach(function (r) {
       $$(r[0]).forEach(function (el) { el.classList.add("reveal"); if (!el.dataset.from) el.dataset.from = r[1]; });
     });
-
-    // Jarak gerak pendek & durasi singkat agar terasa mengalun, bukan meloncat
-    var FROM = {
-      up: ["translateY(18px)", "translateY(0px)"],
-      left: ["translateX(-24px)", "translateX(0px)"],
-      right: ["translateX(24px)", "translateX(0px)"],
-      zoom: ["scale(0.96)", "scale(1)"]
-    };
-    // anime.waapi = Web Animations API → transform/opacity dijalankan di thread compositor (GPU)
-    function reveal(el, order) {
-      el.classList.add("is-in"); // nilai akhir dipegang CSS setelah animasi selesai
-      A.waapi.animate(el, {
-        opacity: [0, 1],
-        transform: FROM[el.dataset.from] || FROM.up,
-        duration: 750,
-        delay: (parseFloat(el.dataset.d) || 0) * 1000 + order * 60,
-        ease: "outQuart"
-      });
-    }
-
-    var io = new IntersectionObserver(function (entries) {
-      // elemen yang masuk layar bersamaan dijalankan bergiliran, bukan sekaligus
-      var order = 0;
-      entries.forEach(function (e) {
-        if (e.isIntersecting) { reveal(e.target, order++); io.unobserve(e.target); }
-      });
-    }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
-    $$(".reveal").forEach(function (el) { io.observe(el); });
+    FX.revealOnScroll($$(".reveal"));
 
     /* ---------- Garis timeline terisi mengikuti scroll ---------- */
     A.animate($(".timeline__line"), {
