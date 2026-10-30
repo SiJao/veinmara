@@ -25,7 +25,7 @@
     // Client ID Google (bukan rahasia) — lihat PANDUAN.md
     "GOOGLE_CLIENT_ID": "173358927372-h4te4bhin2bjddo8al6po3n8j7enp7uu.apps.googleusercontent.com",
     // Akun yang boleh masuk Control Panel (pisahkan dengan koma kalau lebih dari satu)
-    "ADMIN_EMAIL": "216326@daarululuumlido.com",
+    "ADMIN_EMAIL": "216326@daarululuumlido.com,216042@daarululuumlido.com,216264@daarululuumlido.com",
     // Hanya akun domain ini yang bisa membuka undangan
     "UNDANGAN_DOMAIN": "daarululuumlido.com"
   }
