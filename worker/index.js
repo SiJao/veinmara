@@ -317,15 +317,20 @@ async function putEntri(env, jenis, e) {
   return t;
 }
 
+// Semua gambar satu entri = path di antara "<jenis>/<id>/" dan "<jenis>/<id>0" ("0" = huruf sesudah "/").
+// Sengaja tidak memakai LIKE: D1 menolak pola LIKE lebih dari 50 karakter (id album bisa panjang).
+const DI_ENTRI = "path >= ? AND path < ?";
+const batasEntri = (jenis, id) => [`${jenis}/${id}/`, `${jenis}/${id}0`];
+
 // Nama gambar (tanpa .jpg) yang tersimpan untuk satu entri
 async function gambarEntri(env, jenis, id) {
-  const { results } = await q(await db(env), "SELECT path FROM vm_gambar WHERE path LIKE ?", `${jenis}/${id}/%`).all();
+  const { results } = await q(await db(env), `SELECT path FROM vm_gambar WHERE ${DI_ENTRI}`, ...batasEntri(jenis, id)).all();
   return new Set(results.map((r) => r.path.slice(jenis.length + id.length + 2)));
 }
 // Hapus gambar entri yang tidak dipakai lagi — satu query (json_each = daftar yang dipertahankan)
 async function pruneGambar(env, jenis, id, dipakai) {
   const keep = JSON.stringify(dipakai.map((n) => `${jenis}/${id}/${n}`));
-  await q(await db(env), "DELETE FROM vm_gambar WHERE path LIKE ? AND path NOT IN (SELECT value FROM json_each(?))", `${jenis}/${id}/%`, keep).run();
+  await q(await db(env), `DELETE FROM vm_gambar WHERE ${DI_ENTRI} AND path NOT IN (SELECT value FROM json_each(?))`, ...batasEntri(jenis, id), keep).run();
 }
 
 function slugify(s, cadangan) {
@@ -598,7 +603,7 @@ async function apiEntri(ctx) {
     const D = await db(env);
     await D.batch([
       q(D, "DELETE FROM vm_entri WHERE jenis = ? AND id = ?", jenis, id),
-      q(D, "DELETE FROM vm_gambar WHERE path LIKE ?", `${jenis}/${id}/%`),
+      q(D, `DELETE FROM vm_gambar WHERE ${DI_ENTRI}`, ...batasEntri(jenis, id)),
     ]);
     return json({ ok: true });
   }
