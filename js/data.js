@@ -19,6 +19,9 @@ window.VEINMARA = {
   // otomatis = terbuka sendiri saat hitung mundur habis · kunci = tetap terkunci · buka = terbuka
   kunci: { mode: "otomatis" },
 
+  // Rundown acara: diisi lewat Control Panel, hanya dikirim server ke tamu undangan yang sudah masuk
+  rundown: [],
+
   // Halaman tambahan — tampil:false menyembunyikan tautannya dari menu
   halaman: {
     undangan: {

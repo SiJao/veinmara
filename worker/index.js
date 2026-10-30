@@ -21,6 +21,7 @@ const JENIS_ENTRI = ["artikel", "album"];
 const MAX_ARTIKEL_BYTES = 150000;
 const MAX_FOTO_ALBUM = 300;
 const MAX_TAMU = 3000;
+const MAX_RUNDOWN = 40;             // baris rundown acara (khusus tamu undangan)
 const GOOGLE_CERTS = "https://www.googleapis.com/oauth2/v3/certs";
 const GOOGLE_ISS = ["accounts.google.com", "https://accounts.google.com"];
 const CERTS_TTL = 21600;            // simpan kunci Google 6 jam
@@ -218,6 +219,16 @@ async function webTerkunci(ctx) {
   if (await ctx.isAdminQuiet()) return false;
   return statusKunci(await kontenTersimpan(ctx.env));
 }
+// Rundown hanya untuk admin & tamu undangan yang sudah masuk (api/undangan) — tidak ikut isi publik
+function kontenPublik(c) {
+  if (!isObj(c)) return c;
+  const { rundown, ...umum } = c;
+  return umum;
+}
+const rundownTamu = async (env) => {
+  const c = await kontenTersimpan(env);
+  return isObj(c) && Array.isArray(c.rundown) ? c.rundown : [];
+};
 // Bagian isi yang boleh dilihat saat terkunci (tanpa filosofi, pemimpin, momen)
 function kontenTerkunci(c) {
   return isObj(c) ? { peresmian: c.peresmian, kunci: c.kunci, halaman: c.halaman } : null;
@@ -492,7 +503,7 @@ async function apiContent(ctx) {
       const id = r.path.slice(5);
       if (validPhotoId(id)) fotos[id] = `uploads/foto/${id}.jpg?v=${r.diubah}`;
     }
-    return json({ ...dasar, content, fotos });
+    return json({ ...dasar, content: admin ? content : kontenPublik(content), fotos });
   }
 
   await ctx.requireAdmin();
@@ -510,6 +521,15 @@ async function apiContent(ctx) {
   const mode = isObj(content.kunci) ? content.kunci.mode : "otomatis";
   if (!MODE_KUNCI.includes(mode)) fail(400, "Pilihan kunci web tidak valid.");
   clean.kunci = { mode };
+  // rundown boleh tidak ada (Control Panel versi lama) → kosong
+  const rundown = content.rundown ?? [];
+  if (!Array.isArray(rundown) || rundown.length > MAX_RUNDOWN) fail(400, `Rundown maksimal ${MAX_RUNDOWN} baris.`);
+  clean.rundown = rundown.map((r, i) => {
+    r = isObj(r) ? r : {};
+    const baris = { jam: teks(r.jam, 20, `Jam rundown ${i + 1}`), acara: teks(r.acara, 120, `Acara rundown ${i + 1}`), ket: teks(r.ket, 200, `Keterangan rundown ${i + 1}`) };
+    if (baris.acara === "") fail(400, `Rundown baris ${i + 1} belum punya nama acara.`);
+    return baris;
+  });
   const s = JSON.stringify(clean);
   if (bytesOf(s) > MAX_CONTENT_BYTES) fail(413, "Isi terlalu besar.");
   const t = iso();
@@ -670,7 +690,7 @@ async function apiUndangan(ctx) {
       tamu = await cari(s.t);
       if (!tamu) { delete s.t; delete s.tx; ctx.ubahSesi = true; }   // sudah dihapus dari daftar
     }
-    return json({ ok: true, clientId, domain, csrf: s.c, tamu: tamu ? dataTamu(tamu) : null });
+    return json({ ok: true, clientId, domain, csrf: s.c, tamu: tamu ? dataTamu(tamu) : null, rundown: tamu ? await rundownTamu(env) : [] });
   }
 
   await ctx.cekCsrf();
@@ -691,7 +711,7 @@ async function apiUndangan(ctx) {
   // token CSRF tetap (undangan.js memakainya lagi untuk "keluar")
   ctx.sess = { ...s, t: tamu.email, tx: now() + TAMU_TTL };
   ctx.ubahSesi = true;
-  return json({ ok: true, tamu: dataTamu(tamu) });
+  return json({ ok: true, tamu: dataTamu(tamu), rundown: await rundownTamu(env) });
 }
 
 // Daftar undangan (admin)

@@ -29,8 +29,30 @@
   var TEMPLATE_CADANGAN = "<p>Kepada Yth.<br><strong>{nama}</strong><br>{keterangan}</p>" +
     "<p>Dengan hormat, kami mengundang Anda untuk menghadiri Peresmian Angkatan VEINMARA Generation pada {tanggal}, pukul {jam}, bertempat di {tempat}.</p>";
 
-  function showCard(t) {
+  function el(tag, cls, teks) {
+    var e = document.createElement(tag);
+    e.className = cls;
+    e.textContent = teks;
+    return e;
+  }
+  function showRundown(list) {
+    var ol = $("#inv-rundown-list");
+    ol.innerHTML = "";
+    (list || []).forEach(function (r) {
+      var li = document.createElement("li");
+      li.appendChild(el("span", "invite__jam", r.jam || ""));
+      var isi = document.createElement("div");
+      isi.appendChild(el("b", "", r.acara || ""));
+      if (r.ket) isi.appendChild(el("span", "invite__ket", r.ket));
+      li.appendChild(isi);
+      ol.appendChild(li);
+    });
+    $("#inv-rundown").hidden = !ol.children.length;
+  }
+
+  function showCard(t, rundown) {
     wait.hidden = true; login.hidden = true; card.hidden = false;
+    showRundown(rundown);
     $("#inv-email").textContent = t.email;
     $("#inv-isi").innerHTML = "";
     window.VeinmaraContent.load().then(function (D) {
@@ -66,7 +88,7 @@
     err.textContent = "Memeriksa undangan…";
     api({ action: "masuk", credential: r.credential }).then(function (d) {
       err.textContent = "";
-      showCard(d.tamu);
+      showCard(d.tamu, d.rundown);
     }, function (e) {
       err.textContent = e.message;
     });
@@ -105,7 +127,7 @@
     cfg = d;
     csrf = d.csrf;
     $("#inv-domain").textContent = "@" + d.domain;
-    if (d.tamu) return showCard(d.tamu);
+    if (d.tamu) return showCard(d.tamu, d.rundown);
     if (!d.clientId) return showError("Login undangan belum diatur oleh admin.");
     showLogin();
     renderButton();

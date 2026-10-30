@@ -55,6 +55,11 @@
         <div class="invite__card" id="inv-card" hidden>
           <!-- teks dari template undangan (Control Panel → Halaman → Undangan), sudah diisi data tamu -->
           <div class="invite__isi prose" id="inv-isi"></div>
+          <!-- rundown dari Control Panel → Acara & Countdown (dikirim server hanya untuk tamu yang sudah masuk) -->
+          <section class="invite__rundown" id="inv-rundown" hidden>
+            <h2>Rundown Acara</h2>
+            <ol id="inv-rundown-list"></ol>
+          </section>
           <p class="invite__who">Masuk sebagai <span id="inv-email"></span> · <button type="button" id="inv-keluar">Keluar</button></p>
         </div>
       </div>

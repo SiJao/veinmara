@@ -488,6 +488,17 @@ p { margin: 0 0 1em; }
 .invite__isi { margin-bottom: 18px; font-size: 17px; line-height: 1.75; text-align: center; overflow-wrap: anywhere; }
 .invite__isi p:last-child { margin-bottom: 0; }
 .invite__isi strong { color: var(--gold-light); }
+/* Rundown: garis waktu emas di bawah teks undangan */
+.invite__rundown { margin: 0 0 18px; padding-top: 18px; border-top: 1px solid var(--line); text-align: left; }
+.invite__rundown h2 { margin: 0 0 14px; text-align: center; font: 18px var(--f-display); letter-spacing: .14em; text-transform: uppercase; color: var(--gold-light); }
+.invite__rundown ol { list-style: none; margin: 0; padding: 0; }
+.invite__rundown li { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 16px; padding: 0 0 14px; }
+.invite__rundown li::before { content: ""; position: absolute; left: 71px; top: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.invite__rundown li:not(:last-child)::after { content: ""; position: absolute; left: 74px; top: 18px; bottom: 2px; width: 1px; background: linear-gradient(var(--gold), transparent); opacity: .5; }
+.invite__rundown li > div { padding-left: 14px; overflow-wrap: anywhere; }
+.invite__jam { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--gold-light); text-align: right; }
+.invite__rundown b { display: block; color: var(--cream); font-weight: 600; }
+.invite__ket { display: block; font-size: 14px; color: var(--muted); }
 .invite__who { margin: 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
 .invite__who button { background: none; border: 0; padding: 0; color: var(--gold-light); font: inherit; text-decoration: underline; cursor: pointer; }
 .btn {

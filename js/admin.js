@@ -8,7 +8,7 @@
 (function () {
   "use strict";
   const DEFAULTS = window.VEINMARA;
-  const EDITABLE = ["peresmian", "kunci", "halaman", "pemimpin", "momen"];
+  const EDITABLE = ["peresmian", "kunci", "rundown", "halaman", "pemimpin", "momen"];
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -254,6 +254,45 @@
     setDirty(true);
     updateKunciStatus();
   });
+  /* ---------- Rundown (khusus tamu undangan) ---------- */
+  function renderRundown() {
+    if (!Array.isArray(state.rundown)) state.rundown = [];
+    const list = state.rundown;
+    $("#rundown-list").innerHTML = list.length ? list.map((r, i) => `
+      <div class="ad-rundown">
+        <label>Jam <input type="text" data-bind="rundown.${i}.jam" placeholder="20.00" maxlength="20"></label>
+        <label>Acara <input type="text" data-bind="rundown.${i}.acara" placeholder="mis. Pembukaan" maxlength="120"></label>
+        <label>Keterangan <input type="text" data-bind="rundown.${i}.ket" placeholder="opsional" maxlength="200"></label>
+        <div class="ad-row-actions">
+          <button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" data-rmove="${i}:-1" ${i === 0 ? "disabled" : ""} aria-label="Naikkan">↑</button>
+          <button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" data-rmove="${i}:1" ${i === list.length - 1 ? "disabled" : ""} aria-label="Turunkan">↓</button>
+          <button type="button" class="ad-btn ad-btn--ghost ad-btn--sm ad-btn--danger" data-rremove="${i}" aria-label="Hapus">✕</button>
+        </div>
+      </div>`).join("") : `<p class="ad-muted">Belum ada rundown.</p>`;
+    bindInputs($("#rundown-list"));
+  }
+  $("#rundown-list").addEventListener("click", (e) => {
+    const mv = e.target.closest("[data-rmove]");
+    const rm = e.target.closest("[data-rremove]");
+    const arr = state.rundown;
+    if (mv) {
+      const [i, d] = mv.dataset.rmove.split(":").map(Number);
+      [arr[i], arr[i + d]] = [arr[i + d], arr[i]];
+    } else if (rm) {
+      const i = Number(rm.dataset.rremove);
+      if (!confirm(`Hapus acara "${arr[i].acara || i + 1}" dari rundown?`)) return;
+      arr.splice(i, 1);
+    } else return;
+    setDirty(true);
+    renderRundown();
+  });
+  $("#btn-add-rundown").addEventListener("click", () => {
+    state.rundown.push({ jam: "", acara: "", ket: "" });
+    setDirty(true);
+    renderRundown();
+    $("#rundown-list .ad-rundown:last-child input")?.focus();
+  });
+
   function updateKunciStatus() {
     const el = $("#f-kunci-status");
     if (!el || !state) return;
@@ -472,6 +511,7 @@
   function renderAll() {
     renderAcara();
     renderKunci();
+    renderRundown();
     bindInputs($("[data-panel='acara']"));
     renderHalaman();
     renderPemimpin();
@@ -483,6 +523,8 @@
     if (!state) return;
     const empty = state.momen.findIndex((m) => !String(m.judul || "").trim());
     if (empty >= 0) { toast(`Momen ${empty + 1} belum punya judul.`, true); return; }
+    const kosong = state.rundown.findIndex((r) => !String(r.acara || "").trim());
+    if (kosong >= 0) { toast(`Rundown baris ${kosong + 1} belum punya nama acara.`, true); return; }
 
     const btn = $("#btn-save");
     btn.disabled = true;

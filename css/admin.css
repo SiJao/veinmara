@@ -178,6 +178,15 @@ input.ad-search { width: min(260px, 100%); }
 .ad-table .ad-row-actions { justify-content: flex-end; }
 .ad-mono { font-family: ui-monospace, Consolas, monospace; font-size: 13px; color: var(--text) !important; }
 
+/* Rundown: satu baris per acara */
+.ad-rundown { display: grid; grid-template-columns: 90px minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.ad-rundown:first-child { margin-top: 6px; }
+#rundown-list + .ad-btn { margin-top: 14px; }
+@media (max-width: 640px) {
+  .ad-rundown { grid-template-columns: 80px minmax(0, 1fr); }
+  .ad-rundown label:nth-child(3), .ad-rundown .ad-row-actions { grid-column: 1 / -1; }
+  .ad-rundown .ad-row-actions { justify-content: flex-end; }
+}
 @media (max-width: 860px) {
   .ad-units { grid-template-columns: minmax(0, 1fr); }
 }
