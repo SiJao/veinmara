@@ -37,6 +37,7 @@ Di-hosting di cPanel (PHP + MySQL). Isi yang sering berubah diedit lewat **Contr
 | `assets/web/` | Gambar & font yang dipakai web (sudah dikecilkan) |
 | `assets/EMBLEM LOGO`, `LOGO ANGKATAN`, `FONT` | File asli dari Drive (besar, tidak di-push) |
 | `konten/` | Teks sumber + arsip internal (struktur lengkap) — tidak di-push |
+| `.assetsignore` | File yang tidak ikut diunggah ke Cloudflare Workers (`api/`, dokumen `.md`, dll.) |
 
 ## Mengedit isi
 

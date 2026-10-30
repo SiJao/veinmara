@@ -1,0 +1,7 @@
+# File yang TIDAK diunggah ke Cloudflare (hanya file web yang perlu).
+api/
+uploads/
+*.md
+.gitignore
+.assetsignore
+.htaccess
