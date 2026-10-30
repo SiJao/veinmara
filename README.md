@@ -1,7 +1,9 @@
 # Web VEINMARA Generation
 
 Web angkatan Kelas Akhir 2026–2027, Pesantren Modern Daarul 'Uluum Lido.
-Di-hosting di cPanel (PHP + MySQL). Isi yang sering berubah diedit lewat **Control Panel** — lihat **PANDUAN-CPANEL.md**.
+Bisa di-hosting di dua tempat (halaman web sama persis). Isi yang sering berubah diedit lewat **Control Panel**:
+- **Cloudflare Workers + D1** (https://veinmara.216326.workers.dev, login admin dengan Google) — lihat **PANDUAN-CLOUDFLARE.md**
+- **cPanel** (PHP + MySQL, login admin dengan kata sandi) — lihat **PANDUAN-CPANEL.md**
 
 ## Halaman
 
@@ -37,7 +39,9 @@ Di-hosting di cPanel (PHP + MySQL). Isi yang sering berubah diedit lewat **Contr
 | `assets/web/` | Gambar & font yang dipakai web (sudah dikecilkan) |
 | `assets/EMBLEM LOGO`, `LOGO ANGKATAN`, `FONT` | File asli dari Drive (besar, tidak di-push) |
 | `konten/` | Teks sumber + arsip internal (struktur lengkap) — tidak di-push |
-| `.assetsignore` | File yang tidak ikut diunggah ke Cloudflare Workers (`api/`, dokumen `.md`, dll.) |
+| `worker/index.js` | Versi Cloudflare dari `api/` (database D1, gambar juga di D1) |
+| `wrangler.jsonc` | Pengaturan Cloudflare: database, Client ID Google, email admin |
+| `.assetsignore` | File yang tidak ikut diunggah ke Cloudflare Workers (`api/`, `worker/`, dokumen `.md`, dll.) |
 
 ## Mengedit isi
 

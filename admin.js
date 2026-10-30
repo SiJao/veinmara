@@ -1,6 +1,6 @@
 /*
  * Control Panel VEINMARA
- * - Login: satu kata sandi admin (dicek di server, api/auth.php)
+ * - Login: kata sandi admin (cPanel, api/auth.php) atau akun Google admin (Cloudflare, worker/index.js)
  * - Data:  api/content.php (isi web, disimpan di MySQL) + api/foto.php (foto JPEG di uploads/foto)
  * - Artikel & dokumentasi: admin-entri.js
  * Setiap perubahan butuh sesi login + token CSRF.
@@ -83,6 +83,7 @@
     try {
       const s = await api("auth.php");
       csrf = s.csrf;
+      if (s.mode === "google") setupGoogleLogin(s);
       s.loggedIn ? enterEditor() : showView("login");
     } catch (e) {
       $("#setup-msg").textContent = e.message + " Lihat bagian \"Kalau ada masalah\" di PANDUAN-CPANEL.md.";
@@ -107,6 +108,44 @@
       btn.disabled = false;
     }
   });
+  // Versi Cloudflare: masuk dengan akun Google admin (dicek ulang di server)
+  function setupGoogleLogin(s) {
+    $("#form-login").hidden = true;
+    $("#login-google").hidden = false;
+    $("#login-intro").textContent = "Khusus admin VEINMARA — masuk dengan akun Google sekolah.";
+    if (!s.clientId) {
+      $("#login-error").textContent = "Login Google belum diatur: isi GOOGLE_CLIENT_ID di wrangler.jsonc (lihat PANDUAN-CLOUDFLARE.md).";
+      return;
+    }
+    const render = () => {
+      google.accounts.id.initialize({
+        client_id: s.clientId,
+        hd: s.domain,
+        ux_mode: "popup",
+        auto_select: false,
+        callback: async (r) => {
+          $("#login-error").textContent = "Memeriksa…";
+          try {
+            const res = await api("auth.php", { action: "login", credential: r.credential });
+            csrf = res.csrf;
+            $("#login-error").textContent = "";
+            enterEditor();
+          } catch (err) {
+            $("#login-error").textContent = err.message;
+          }
+        },
+      });
+      google.accounts.id.renderButton($("#login-google"), { theme: "outline", size: "large", shape: "pill", text: "signin_with", locale: "id" });
+    };
+    if (window.google && google.accounts) return render();
+    const gsi = document.createElement("script");
+    gsi.src = "https://accounts.google.com/gsi/client";
+    gsi.async = true;
+    gsi.onload = render;
+    gsi.onerror = () => { $("#login-error").textContent = "Layanan login Google tidak bisa dimuat. Periksa koneksi."; };
+    document.head.appendChild(gsi);
+  }
+
   $("#btn-logout").addEventListener("click", async () => {
     if (anyDirty() && !confirm("Ada perubahan yang belum disimpan. Tetap keluar?")) return;
     try { await api("auth.php", { action: "logout" }); } catch (e) { /* tetap keluar */ }

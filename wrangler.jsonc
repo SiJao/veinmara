@@ -1,0 +1,31 @@
+// Pengaturan Cloudflare Workers untuk web VEINMARA.
+// Setiap push ke GitHub (main) otomatis di-deploy oleh Cloudflare.
+{
+  "name": "veinmara",
+  "main": "worker/index.js",
+  "compatibility_date": "2025-09-01",
+  "workers_dev": true,
+  "observability": { "enabled": true },
+
+  // File statis (halaman, CSS, JS, gambar). Yang tidak diunggah: lihat .assetsignore
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    // hanya API & gambar unggahan yang lewat Worker; sisanya langsung dari Cloudflare (gratis)
+    "run_worker_first": ["/api/*", "/uploads/*"]
+  },
+
+  // Database D1: isi web, artikel, album, daftar undangan, dan gambar
+  "d1_databases": [
+    { "binding": "DB", "database_name": "veinmara", "database_id": "bfdd9deb-8d14-4ef1-b12e-40ad44870957" }
+  ],
+
+  "vars": {
+    // Client ID Google (bukan rahasia) — lihat PANDUAN-CLOUDFLARE.md
+    "GOOGLE_CLIENT_ID": "",
+    // Akun yang boleh masuk Control Panel (pisahkan dengan koma kalau lebih dari satu)
+    "ADMIN_EMAIL": "216326@daarululuumlido.com",
+    // Hanya akun domain ini yang bisa membuka undangan
+    "UNDANGAN_DOMAIN": "daarululuumlido.com"
+  }
+}

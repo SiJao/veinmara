@@ -36,13 +36,14 @@
     <!-- Login -->
     <section class="ad-card ad-center" id="view-login" hidden>
       <h1>Masuk</h1>
-      <p class="ad-muted">Khusus admin VEINMARA.</p>
+      <p class="ad-muted" id="login-intro">Khusus admin VEINMARA.</p>
       <form id="form-login" class="ad-form">
         <input type="text" name="username" value="admin" autocomplete="username" hidden>
         <label>Kata sandi <input type="password" id="login-pass" autocomplete="current-password" required></label>
         <button class="ad-btn" type="submit" id="btn-login">Masuk</button>
-        <p class="ad-error" id="login-error" role="alert"></p>
       </form>
+      <div class="ad-google" id="login-google" hidden></div>
+      <p class="ad-error" id="login-error" role="alert"></p>
     </section>
 
     <!-- Editor -->

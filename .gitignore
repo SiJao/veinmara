@@ -13,3 +13,8 @@ uploads/foto/*
 !uploads/foto/.htaccess
 uploads/artikel/
 uploads/album/
+
+# Cloudflare (wrangler) — file lokal
+.wrangler/
+node_modules/
+.dev.vars

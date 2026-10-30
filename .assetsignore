@@ -1,7 +1,18 @@
 # File yang TIDAK diunggah ke Cloudflare (hanya file web yang perlu).
 api/
 uploads/
+worker/
+wrangler.jsonc
+.wrangler/
+node_modules/
 *.md
 .gitignore
 .assetsignore
 .htaccess
+# sama dengan .gitignore (file asli besar & arsip internal, kalau ada di folder lokal)
+*.zip
+*.pdf
+*.psd
+konten/
+assets/*
+!assets/web/
