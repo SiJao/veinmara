@@ -21,7 +21,7 @@
   ],
 
   "vars": {
-    // Client ID Google (bukan rahasia) â€” lihat PANDUAN-CLOUDFLARE.md
+    // Client ID Google (bukan rahasia) — lihat PANDUAN-CLOUDFLARE.md
     "GOOGLE_CLIENT_ID": "173358927372-h4te4bhin2bjddo8al6po3n8j7enp7uu.apps.googleusercontent.com",
     // Akun yang boleh masuk Control Panel (pisahkan dengan koma kalau lebih dari satu)
     "ADMIN_EMAIL": "216326@daarululuumlido.com",
