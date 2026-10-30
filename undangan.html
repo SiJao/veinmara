@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Undangan · VEINMARA Generation</title>
-  <meta name="description" content="Undangan VEINMARA Generation — segera hadir.">
+  <meta name="description" content="Undangan Peresmian Angkatan VEINMARA Generation.">
   <meta name="theme-color" content="#1c0509">
   <link rel="icon" type="image/png" href="assets/web/logo-veinmara.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/style.css">
   <script>
     if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("anim");
   </script>
@@ -42,7 +42,7 @@
       <img class="soon__logo" src="assets/web/logo-veinmara.png" alt="" width="1000" height="1000" data-intro>
       <p class="eyebrow" data-intro>Veinmara Generation</p>
       <h1 class="soon__title" id="soon-title" data-intro>Undangan</h1>
-      <p class="soon__script" data-intro>Coming Soon</p>
+      <p class="soon__script" data-intro>Peresmian Angkatan</p>
       <div class="soon__bar" data-intro aria-hidden="true"><span></span></div>
       <!-- Undangan khusus tamu terdaftar: masuk dengan akun Google sekolah (undangan.js) -->
       <div class="invite" id="invite" data-intro aria-live="polite">
@@ -53,10 +53,8 @@
           <p class="invite__error" id="inv-error" role="alert"></p>
         </div>
         <div class="invite__card" id="inv-card" hidden>
-          <p class="invite__to">Kepada Yth.</p>
-          <p class="invite__name" id="inv-nama"></p>
-          <p class="invite__ket" id="inv-ket"></p>
-          <p class="soon__msg" id="soon-msg"></p>
+          <!-- teks dari template undangan (Control Panel → Halaman → Undangan), sudah diisi data tamu -->
+          <div class="invite__isi prose" id="inv-isi"></div>
           <p class="invite__who">Masuk sebagai <span id="inv-email"></span> · <button type="button" id="inv-keluar">Keluar</button></p>
         </div>
       </div>
@@ -65,10 +63,11 @@
   </main>
 
   <script src="vendor/anime-4.5.0.umd.min.js"></script>
-  <script src="data.js"></script>
-  <script src="content.js"></script>
-  <script src="fx.js"></script>
-  <script src="soon.js"></script>
-  <script src="undangan.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/content.js"></script>
+  <script src="js/fx.js"></script>
+  <script src="js/rich.js"></script>
+  <script src="js/soon.js"></script>
+  <script src="js/undangan.js"></script>
 </body>
 </html>

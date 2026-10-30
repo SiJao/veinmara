@@ -1,18 +1,10 @@
-# File asli besar & arsip internal — tidak di-push
+# Arsip internal & file asli besar — tidak di-push
+konten/
 *.zip
 *.pdf
 *.psd
-konten/
 assets/*
 !assets/web/
-
-# Konfigurasi server (berisi password) & gambar yang diunggah — hanya ada di hosting
-veinmara-config.php
-api/config.php
-uploads/foto/*
-!uploads/foto/.htaccess
-uploads/artikel/
-uploads/album/
 
 # Cloudflare (wrangler) — file lokal
 .wrangler/

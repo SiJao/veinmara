@@ -1,12 +1,11 @@
 /*
- * Worker VEINMARA (Cloudflare) — pengganti api/*.php untuk versi Cloudflare.
- * Alamat API & gambar SAMA dengan versi cPanel, jadi halaman web tidak perlu diubah:
- *   /api/auth.php, content.php, foto.php, entri.php, gambar.php, undangan.php, tamu.php
+ * Worker VEINMARA (Cloudflare): API + database D1 + kunci web.
+ *   /api/auth, content, foto, entri, gambar, undangan, tamu
  *   /uploads/...jpg → gambar dari database D1 (tabel vm_gambar)
- * Alamat lain dilayani langsung sebagai file statis (assets).
+ * Halaman yang bisa dikunci & js/data.js juga lewat sini (lihat "Kunci web");
+ * alamat lain dilayani langsung sebagai file statis (assets).
  *
- * Bedanya dengan PHP:
- * - Login admin memakai Google (hanya ADMIN_EMAIL di wrangler.jsonc), bukan kata sandi.
+ * - Login admin & tamu undangan memakai akun Google (admin: ADMIN_EMAIL di wrangler.jsonc).
  * - Sesi disimpan di cookie bertanda tangan (HMAC); kuncinya dibuat otomatis di database.
  * - Banyak baris diproses dengan json_each dalam satu query (batas query D1 per permintaan).
  */
@@ -17,6 +16,7 @@ const MAX_BODY = MAX_PHOTO_BYTES * 2;
 const SESSION_IDLE = 7200;          // login admin berakhir setelah 2 jam tidak aktif
 const TAMU_TTL = 86400;             // login tamu undangan berlaku 1 hari
 const EDITABLE_KEYS = ["peresmian", "halaman", "pemimpin", "momen"];
+const MODE_KUNCI = ["otomatis", "kunci", "buka"];   // kunci web (lihat statusKunci)
 const JENIS_ENTRI = ["artikel", "album"];
 const MAX_ARTIKEL_BYTES = 150000;
 const MAX_FOTO_ALBUM = 300;
@@ -192,6 +192,53 @@ class Ctx {
   get(name) { return this.url.searchParams.get(name); }
 }
 
+/* ---------- Kunci web ----------
+ * Selama terkunci, pengunjung (bukan admin) hanya mendapat halaman hitung mundur (terkunci.html):
+ * halaman isi, data.js, artikel/album, dan gambar unggahan tidak dikirim sama sekali.
+ * Undangan & Control Panel tetap terbuka.
+ */
+const RE_HALAMAN_KUNCI = /^\/(index|artikel|dokumentasi|panggung-gembira)?(\.html|\/)?$/;
+let kontenCache = null;   // isi tersimpan, disimpan sebentar (15 detik) per instance Worker
+async function kontenTersimpan(env) {
+  if (kontenCache && Date.now() - kontenCache.t < 15000) return kontenCache.c;
+  const row = await q(await db(env), "SELECT isi FROM vm_konten WHERE kunci = 'content'").first();
+  let c = null;
+  try { c = row ? JSON.parse(row.isi) : null; } catch (e) { c = null; }
+  kontenCache = { t: Date.now(), c };
+  return c;
+}
+function statusKunci(c) {
+  if (!isObj(c)) return true;   // belum pernah disimpan dari Control Panel → tetap terkunci (aman)
+  const mode = isObj(c.kunci) && MODE_KUNCI.includes(c.kunci.mode) ? c.kunci.mode : "otomatis";
+  if (mode !== "otomatis") return mode === "kunci";
+  const t = Date.parse(isObj(c.peresmian) ? c.peresmian.waktu : "");
+  return !(t <= Date.now());
+}
+async function webTerkunci(ctx) {
+  if (await ctx.isAdminQuiet()) return false;
+  return statusKunci(await kontenTersimpan(ctx.env));
+}
+// Bagian isi yang boleh dilihat saat terkunci (tanpa filosofi, pemimpin, momen)
+function kontenTerkunci(c) {
+  return isObj(c) ? { peresmian: c.peresmian, kunci: c.kunci, halaman: c.halaman } : null;
+}
+
+async function halamanKunci(ctx) {
+  const r = await ctx.env.ASSETS.fetch(new Request(new URL("/terkunci", ctx.url)));
+  return new Response(r.body, {
+    status: 200,
+    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
+  });
+}
+// js/data.js versi terkunci: hanya acara & teks halaman (dipakai halaman undangan)
+async function dataTerkunci(ctx) {
+  const c = kontenTerkunci(await kontenTersimpan(ctx.env)) || {};
+  const D = { peresmian: c.peresmian || null, kunci: c.kunci || { mode: "otomatis" }, halaman: c.halaman || {}, elemenLogo: [], pemimpin: [], momen: [] };
+  return new Response("window.VEINMARA = " + JSON.stringify(D).replace(/</g, "\\u003c") + ";\n", {
+    headers: { "Content-Type": "text/javascript; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
+  });
+}
+
 /* ---------- Gambar (JPEG di tabel vm_gambar) ---------- */
 // Lebar & tinggi dari header JPEG (null = bukan JPEG yang wajar)
 function ukuranJpeg(b) {
@@ -230,7 +277,7 @@ async function saveJpeg(env, path, data) {
 const RE_UPLOAD = /^\/uploads\/(foto\/[a-z0-9-]{1,60}|(?:artikel|album)\/[a-z0-9-]{1,80}\/[a-f0-9]{16}(?:-t)?)\.jpg$/;
 async function serveUpload(ctx) {
   const m = ctx.url.pathname.match(RE_UPLOAD);
-  if (!m || (ctx.req.method !== "GET" && ctx.req.method !== "HEAD")) return new Response("Tidak ditemukan.", { status: 404 });
+  if (!m || (ctx.req.method !== "GET" && ctx.req.method !== "HEAD") || await webTerkunci(ctx)) return new Response("Tidak ditemukan.", { status: 404 });
   const row = await q(await db(ctx.env), "SELECT data FROM vm_gambar WHERE path = ?", m[1]).first();
   if (!row) return new Response("Tidak ditemukan.", { status: 404 });
   // nama file artikel/album acak & tidak pernah berubah; foto ketua/wakil memakai ?v=<waktu>
@@ -315,7 +362,7 @@ function teks(v, max, label) {
 }
 const hariIni = () => new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);  // WIB
 
-// Lapisan pengaman tambahan (seperti strip_tags di PHP) — browser juga membersihkan isi (rich.js)
+// Lapisan pengaman tambahan: hanya tag yang diizinkan — browser juga membersihkan isi (js/rich.js)
 const TAG_BOLEH = new Set(["p", "br", "strong", "b", "em", "i", "u", "h2", "h3", "ul", "ol", "li", "blockquote", "a", "img"]);
 function bersihkanHtml(isi) {
   isi = isi.replace(/<!--[\s\S]*?(-->|$)/g, "").replace(/<[^>]*>?/g, (m) => {
@@ -336,7 +383,7 @@ async function httpGet(url) {
   } catch (e) { return null; }
 }
 
-// Kunci publik Google (kid → [n, e]); $segar = paksa ambil ulang. Disimpan di vm_konten seperti versi PHP.
+// Kunci publik Google (kid → [n, e]); segar = paksa ambil ulang. Disimpan sementara di vm_konten.
 async function googleKeys(env, segar = false) {
   const D = await db(env);
   const row = await q(D, "SELECT isi, diubah FROM vm_konten WHERE kunci = 'google_certs'").first();
@@ -428,13 +475,19 @@ async function apiContent(ctx) {
   const D = await db(ctx.env);
   if (m === "GET") {
     const row = await q(D, "SELECT isi, diubah FROM vm_konten WHERE kunci = 'content'").first();
+    const content = row ? JSON.parse(row.isi) : null;
+    const admin = await ctx.isAdminQuiet();
+    // status dari salinan yang sama dengan penjaga halaman (supaya halaman kunci tidak memuat ulang beruntun)
+    const terkunci = statusKunci(await kontenTersimpan(ctx.env));
+    const dasar = { ok: true, updatedAt: row ? row.diubah : null, terkunci, admin, sekarang: Date.now() };
+    if (terkunci && !admin) return json({ ...dasar, content: kontenTerkunci(content), fotos: {} });
     const { results } = await q(D, "SELECT path, diubah FROM vm_gambar WHERE path LIKE 'foto/%'").all();
     const fotos = {};
     for (const r of results) {
       const id = r.path.slice(5);
       if (validPhotoId(id)) fotos[id] = `uploads/foto/${id}.jpg?v=${r.diubah}`;
     }
-    return json({ ok: true, content: row ? JSON.parse(row.isi) : null, updatedAt: row ? row.diubah : null, fotos });
+    return json({ ...dasar, content, fotos });
   }
 
   await ctx.requireAdmin();
@@ -448,10 +501,15 @@ async function apiContent(ctx) {
   }
   if (!["pemimpin", "momen", "halaman", "peresmian"].every((k) => isObj(clean[k]))) fail(400, "Struktur isi tidak valid.");
   if (isNaN(Date.parse(String(clean.peresmian.waktu ?? "")))) fail(400, "Waktu peresmian tidak valid.");
+  // kunci boleh tidak ada (Control Panel versi lama) → otomatis
+  const mode = isObj(content.kunci) ? content.kunci.mode : "otomatis";
+  if (!MODE_KUNCI.includes(mode)) fail(400, "Pilihan kunci web tidak valid.");
+  clean.kunci = { mode };
   const s = JSON.stringify(clean);
   if (bytesOf(s) > MAX_CONTENT_BYTES) fail(413, "Isi terlalu besar.");
   const t = iso();
   await q(D, "REPLACE INTO vm_konten (kunci, isi, diubah) VALUES ('content', ?, ?)", s, t).run();
+  kontenCache = null;
   return json({ ok: true, updatedAt: t });
 }
 
@@ -480,7 +538,7 @@ async function apiGambar(ctx) {
   return json({ ok: true, url: entriUrl(jenis, id, nama) });
 }
 
-// Artikel & album — sama dengan api/entri.php
+// Artikel & album
 async function apiEntri(ctx) {
   const m = ctx.method("GET", "POST");
   const env = ctx.env;
@@ -488,7 +546,9 @@ async function apiEntri(ctx) {
     const jenis = ctx.get("jenis");
     if (!validJenis(jenis)) fail(400, "Jenis tidak dikenal.");
     const admin = await ctx.isAdminQuiet();
+    const terkunci = !admin && await webTerkunci(ctx);
     if (ctx.url.searchParams.has("id")) {
+      if (terkunci) fail(404, "Tidak ditemukan.");
       const id = ctx.get("id");
       const e = validEntriId(id) ? await getEntri(env, jenis, id) : null;
       if (!e || (!e.terbit && !admin)) fail(404, "Tidak ditemukan.");
@@ -496,6 +556,7 @@ async function apiEntri(ctx) {
     }
     const semua = !!ctx.get("semua") && ctx.get("semua") !== "0";
     if (semua && !admin) fail(401, "Silakan masuk dulu.");
+    if (terkunci) return json({ ok: true, daftar: [] });
     const lim = ctx.get("limit");
     const limit = Math.max(1, Math.min(100, lim === null ? 100 : parseInt(lim, 10) || 0));
     const { results } = await q(await db(env),
@@ -587,7 +648,7 @@ async function apiEntri(ctx) {
   return json({ ok: true, entri: tampil(jenis, await getEntri(env, jenis, id), true) });
 }
 
-// Undangan (tamu) — sama dengan api/undangan.php
+// Undangan (tamu)
 async function apiUndangan(ctx) {
   const m = ctx.method("GET", "POST");
   const env = ctx.env;
@@ -628,7 +689,7 @@ async function apiUndangan(ctx) {
   return json({ ok: true, tamu: dataTamu(tamu) });
 }
 
-// Daftar undangan (admin) — sama dengan api/tamu.php
+// Daftar undangan (admin)
 async function apiTamu(ctx) {
   const m = ctx.method("GET", "POST");
   const env = ctx.env;
@@ -642,7 +703,7 @@ async function apiTamu(ctx) {
       const raw = await httpGet(certsUrl(env));
       let koneksi = false;
       try { koneksi = !!raw && Array.isArray(JSON.parse(raw).keys) && JSON.parse(raw).keys.length > 0; } catch (e) { koneksi = false; }
-      return json({ ok: true, cek: { openssl: true, koneksi, clientId: !!clientId } });
+      return json({ ok: true, cek: { koneksi, clientId: !!clientId } });
     }
     const { results } = await q(D, "SELECT email, nama, keterangan, dibuka FROM vm_undangan ORDER BY nama").all();
     return json({ ok: true, domain, clientId, daftar: results });
@@ -690,13 +751,13 @@ async function apiTamu(ctx) {
 }
 
 const API = {
-  "auth.php": apiAuth,
-  "content.php": apiContent,
-  "foto.php": apiFoto,
-  "gambar.php": apiGambar,
-  "entri.php": apiEntri,
-  "undangan.php": apiUndangan,
-  "tamu.php": apiTamu,
+  auth: apiAuth,
+  content: apiContent,
+  foto: apiFoto,
+  gambar: apiGambar,
+  entri: apiEntri,
+  undangan: apiUndangan,
+  tamu: apiTamu,
 };
 
 export default {
@@ -706,8 +767,13 @@ export default {
     let res;
     try {
       if (path.startsWith("/uploads/")) return await serveUpload(ctx);
-      if (!path.startsWith("/api/")) return env.ASSETS.fetch(req);
-      const handler = API[path.slice(5)];
+      if (!path.startsWith("/api/")) {
+        if (RE_HALAMAN_KUNCI.test(path) && await webTerkunci(ctx)) return await halamanKunci(ctx);
+        if (path === "/js/data.js" && await webTerkunci(ctx)) return await dataTerkunci(ctx);
+        return env.ASSETS.fetch(req);
+      }
+      const nama = path.slice(5);
+      const handler = Object.hasOwn(API, nama) ? API[nama] : null;
       res = handler ? await handler(ctx) : json({ ok: false, error: "Tidak ditemukan." }, 404);
     } catch (e) {
       if (e instanceof Gagal) res = json({ ok: false, error: e.message }, e.code);

@@ -1,6 +1,6 @@
 /*
  * Control Panel — Daftar undangan.
- * Hanya email @domain sekolah. Setiap aksi (simpan/impor/hapus) langsung tersimpan lewat api/tamu.php.
+ * Hanya email @domain sekolah. Setiap aksi (simpan/impor/hapus) langsung tersimpan lewat api/tamu.
  */
 (function () {
   "use strict";
@@ -12,12 +12,12 @@
 
   async function muat() {
     try {
-      const r = await api("tamu.php");
+      const r = await api("tamu");
       daftar = r.daftar;
       domain = r.domain;
       $("#tamu-status").innerHTML = r.clientId
         ? `Aktif. Tamu masuk dengan akun <b>@${esc(domain)}</b>. Link undangan: <code>${esc(location.origin + location.pathname.replace(/admin\.html$/, ""))}undangan.html</code>`
-        : `<b>Belum diatur.</b> Isi <code>google_client_id</code> di <code>veinmara-config.php</code> (lihat PANDUAN-CPANEL.md bagian Undangan). Daftar tamu tetap bisa disiapkan sekarang.`;
+        : `<b>Belum diatur.</b> Isi <code>GOOGLE_CLIENT_ID</code> di <code>wrangler.jsonc</code> (lihat PANDUAN.md). Daftar tamu tetap bisa disiapkan sekarang.`;
       render();
     } catch (err) { fail(err, "Gagal memuat daftar undangan: "); }
   }
@@ -44,7 +44,7 @@
   }
 
   async function simpan(list) {
-    const r = await api("tamu.php", { action: "simpan", daftar: list });
+    const r = await api("tamu", { action: "simpan", daftar: list });
     await muat();
     return r;
   }
@@ -86,7 +86,7 @@
     } else if (del) {
       if (!confirm(`Hapus ${del.dataset.tdel} dari daftar undangan?`)) return;
       try {
-        await api("tamu.php", { action: "hapus", emails: [del.dataset.tdel] });
+        await api("tamu", { action: "hapus", emails: [del.dataset.tdel] });
         toast("Tamu dihapus.");
         await muat();
       } catch (err) { fail(err, "Gagal menghapus: "); }
@@ -138,17 +138,15 @@
     } finally { btn.disabled = false; }
   });
 
-  /* ---------- Cek kesiapan hosting ---------- */
+  /* ---------- Cek kesiapan login Google ---------- */
   $("#tamu-cek").addEventListener("click", async () => {
     const ul = $("#tamu-cek-hasil");
     ul.hidden = false;
     ul.innerHTML = "<li>Memeriksa…</li>";
     try {
-      const c = (await api("tamu.php?cek=1")).cek;
+      const c = (await api("tamu?cek=1")).cek;
       const li = (ok, teks) => `<li class="${ok ? "ad-ok" : "ad-bad"}">${ok ? "✓" : "✕"} ${teks}</li>`;
-      ul.innerHTML = li(c.clientId, "Client ID Google sudah diisi") + li(c.openssl, "OpenSSL aktif (untuk memeriksa tanda tangan Google)") +
-        li(c.koneksi, "Hosting bisa menghubungi Google") +
-        (c.koneksi ? "" : `<li class="ad-muted">Kalau ini gagal, login undangan tidak bisa dipakai di hosting ini (koneksi keluar diblokir) — tanyakan ke penyedia hosting.</li>`);
+      ul.innerHTML = li(c.clientId, "Client ID Google sudah diisi") + li(c.koneksi, "Server bisa menghubungi Google");
     } catch (err) { ul.hidden = true; fail(err, "Gagal memeriksa: "); }
   });
 

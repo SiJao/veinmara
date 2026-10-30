@@ -5,13 +5,13 @@
 
 @font-face {
   font-family: "Chocolatier";
-  src: url("assets/web/font/chocolatier.ttf") format("truetype");
+  src: url("../assets/web/font/chocolatier.ttf") format("truetype");
   font-display: swap;
 }
 /* Personal-use: angka diganti tulisan WARNING — JANGAN dipakai untuk teks berangka */
 @font-face {
   font-family: "Rosellinda";
-  src: url("assets/web/font/rosellinda.woff") format("woff");
+  src: url("../assets/web/font/rosellinda.woff") format("woff");
   font-display: swap;
 }
 
@@ -204,6 +204,12 @@ p { margin: 0 0 1em; }
 }
 .countdown__grid span { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
 .hero__done { margin-top: 28px; color: var(--emerald-light); letter-spacing: .14em; text-transform: uppercase; font-size: 14px; }
+.kunci__when { margin-top: 18px; color: var(--muted); font-size: 15px; letter-spacing: .04em; }
+/* Halaman kunci: tanpa menu → hitung mundur harus terlihat tanpa menggulir */
+.hero--kunci { padding-top: 40px; padding-bottom: 40px; }
+.hero--kunci .hero__logo { width: min(250px, 60vw, 30svh); }
+.hero--kunci .hero__motto { margin-top: 18px; }
+.hero--kunci .countdown { margin-top: 22px; }
 
 .hero__scroll {
   position: absolute; bottom: 22px; left: 50%; translate: -50% 0;
@@ -479,10 +485,9 @@ p { margin: 0 0 1em; }
   width: 100%; padding: 26px clamp(18px, 4vw, 34px) 18px; border-radius: 24px; border: 1px solid var(--line);
   background: radial-gradient(90% 120% at 50% 0%, rgba(104, 21, 29, .6), rgba(28, 5, 9, .35));
 }
-.invite__to { margin: 0 0 4px; font-size: 13px; letter-spacing: .24em; text-transform: uppercase; color: var(--gold); }
-.invite__name { margin: 0 0 4px; font: 600 clamp(22px, 4.5vw, 30px)/1.3 var(--f-body); color: var(--cream); overflow-wrap: anywhere; }
-.invite__ket { margin: 0 0 16px; color: var(--emerald-light); font-size: 15px; }
-.invite__card .soon__msg { margin: 0 auto 18px; }
+.invite__isi { margin-bottom: 18px; font-size: 17px; line-height: 1.75; text-align: center; overflow-wrap: anywhere; }
+.invite__isi p:last-child { margin-bottom: 0; }
+.invite__isi strong { color: var(--gold-light); }
 .invite__who { margin: 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
 .invite__who button { background: none; border: 0; padding: 0; color: var(--gold-light); font: inherit; text-decoration: underline; cursor: pointer; }
 .btn {

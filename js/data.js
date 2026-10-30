@@ -1,8 +1,8 @@
 /*
  * DATA BAWAAN WEB VEINMARA
- * Isi ini dipakai kalau Firebase belum diatur / sedang tidak bisa dihubungi.
- * Setelah Firebase aktif, bagian peresmian, halaman, pemimpin, dan momen
- * diedit dari Control Panel (admin.html) — bukan dari file ini.
+ * Isi ini dipakai kalau server sedang tidak bisa dihubungi.
+ * Bagian peresmian, kunci, halaman, pemimpin, dan momen diedit dari Control Panel
+ * (admin.html) — bukan dari file ini.
  * Sumber: konten/*.md (Naskah Pengesahan Nama 26, Proposal Peresmian).
  */
 
@@ -15,12 +15,23 @@ window.VEINMARA = {
     tempat: "Aula Siti Hajar",
   },
 
+  // Kunci web: selama terkunci, pengunjung hanya melihat hitung mundur (terkunci.html).
+  // otomatis = terbuka sendiri saat hitung mundur habis · kunci = tetap terkunci · buka = terbuka
+  kunci: { mode: "otomatis" },
+
   // Halaman tambahan — tampil:false menyembunyikan tautannya dari menu
   halaman: {
     undangan: {
       tampil: true,
       judul: "Undangan",
       pesan: "Undangan resmi VEINMARA Generation sedang kami siapkan. Nantikan kabar selanjutnya.",
+      // Teks undangan setelah tamu masuk. Isian {nama} {keterangan} {tanggal} {jam} {tempat}
+      // diganti otomatis dengan data tamu & acara. Format yang boleh: paragraf, tebal, miring, garis bawah.
+      template:
+        "<p>Kepada Yth.<br><strong>{nama}</strong><br>{keterangan}</p>" +
+        "<p>Dengan memohon rahmat Allah SWT, kami mengundang Anda untuk menghadiri " +
+        "<strong>Peresmian Angkatan VEINMARA Generation</strong> pada {tanggal}, pukul {jam}, bertempat di {tempat}.</p>" +
+        "<p>Merupakan suatu kehormatan bagi kami atas kehadiran Anda.</p>",
     },
     panggung: {
       tampil: true,

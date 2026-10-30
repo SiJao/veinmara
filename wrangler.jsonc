@@ -1,4 +1,4 @@
-﻿// Pengaturan Cloudflare Workers untuk web VEINMARA.
+// Pengaturan Cloudflare Workers untuk web VEINMARA.
 // Setiap push ke GitHub (main) otomatis di-deploy oleh Cloudflare.
 {
   "name": "veinmara",
@@ -11,8 +11,9 @@
   "assets": {
     "directory": ".",
     "binding": "ASSETS",
-    // hanya API & gambar unggahan yang lewat Worker; sisanya langsung dari Cloudflare (gratis)
-    "run_worker_first": ["/api/*", "/uploads/*"]
+    // lewat Worker: API, gambar unggahan, dan halaman yang bisa dikunci (kunci web);
+    // sisanya (CSS, JS, gambar bawaan) langsung dari Cloudflare (gratis)
+    "run_worker_first": ["/api/*", "/uploads/*", "/", "/index*", "/artikel*", "/dokumentasi*", "/panggung-gembira*", "/js/data.js"]
   },
 
   // Database D1: isi web, artikel, album, daftar undangan, dan gambar
@@ -21,7 +22,7 @@
   ],
 
   "vars": {
-    // Client ID Google (bukan rahasia) — lihat PANDUAN-CLOUDFLARE.md
+    // Client ID Google (bukan rahasia) — lihat PANDUAN.md
     "GOOGLE_CLIENT_ID": "173358927372-h4te4bhin2bjddo8al6po3n8j7enp7uu.apps.googleusercontent.com",
     // Akun yang boleh masuk Control Panel (pisahkan dengan koma kalau lebih dari satu)
     "ADMIN_EMAIL": "216326@daarululuumlido.com",

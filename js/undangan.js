@@ -1,6 +1,6 @@
 /*
  * Undangan: hanya untuk akun Google sekolah yang ada di daftar undangan.
- * 1. Tanya server (api/undangan.php): sudah masuk? Client ID Google?
+ * 1. Tanya server (api/undangan): sudah masuk? Client ID Google?
  * 2. Belum → tampilkan tombol "Masuk dengan Google" (Google Identity Services)
  * 3. Token dari Google dikirim ke server; server memeriksa tanda tangan, domain, dan daftar undangan.
  */
@@ -19,18 +19,27 @@
       opt.headers["X-CSRF"] = csrf;
       opt.body = JSON.stringify(payload);
     }
-    return fetch("api/undangan.php", opt).then(function (r) {
+    return fetch("api/undangan", opt).then(function (r) {
       return r.json().catch(function () { return { ok: false, error: "Server tidak merespons dengan benar (HTTP " + r.status + ")." }; })
         .then(function (d) { if (!r.ok || d.ok === false) throw new Error(d.error || "HTTP " + r.status); return d; });
     });
   }
 
+  // dipakai kalau template belum pernah disimpan dari Control Panel
+  var TEMPLATE_CADANGAN = "<p>Kepada Yth.<br><strong>{nama}</strong><br>{keterangan}</p>" +
+    "<p>Dengan hormat, kami mengundang Anda untuk menghadiri Peresmian Angkatan VEINMARA Generation pada {tanggal}, pukul {jam}, bertempat di {tempat}.</p>";
+
   function showCard(t) {
     wait.hidden = true; login.hidden = true; card.hidden = false;
-    $("#inv-nama").textContent = t.nama;
-    $("#inv-ket").textContent = t.keterangan || "";
-    $("#inv-ket").hidden = !t.keterangan;
     $("#inv-email").textContent = t.email;
+    $("#inv-isi").innerHTML = "";
+    window.VeinmaraContent.load().then(function (D) {
+      var p = D.peresmian || {};
+      var u = (D.halaman && D.halaman.undangan) || {};
+      $("#inv-isi").innerHTML = window.VeinmaraRich.template(u.template || TEMPLATE_CADANGAN, {
+        nama: t.nama, keterangan: t.keterangan, tanggal: p.tanggal, jam: p.jam, tempat: p.tempat
+      });
+    });
   }
   function showLogin(pesan) {
     wait.hidden = true; card.hidden = true; login.hidden = false;

@@ -16,7 +16,8 @@
       title.textContent = h.judul;
       document.title = h.judul + " · VEINMARA Generation";
     }
-    $("#soon-msg").textContent = h.pesan || ""; // di undangan: tampil setelah tamu masuk
+    var msg = $("#soon-msg");   // undangan tidak punya pesan (memakai template, lihat undangan.js)
+    if (msg) msg.textContent = h.pesan || "";
 
     if (!MOTION) return;
 

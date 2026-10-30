@@ -1,14 +1,14 @@
 /*
  * Control Panel VEINMARA
- * - Login: kata sandi admin (cPanel, api/auth.php) atau akun Google admin (Cloudflare, worker/index.js)
- * - Data:  api/content.php (isi web, disimpan di MySQL) + api/foto.php (foto JPEG di uploads/foto)
+ * - Login: akun Google admin (dicek di server, worker/index.js)
+ * - Data:  api/content (isi web) + api/foto (foto ketua & wakil) — disimpan di database D1
  * - Artikel & dokumentasi: admin-entri.js
  * Setiap perubahan butuh sesi login + token CSRF.
  */
 (function () {
   "use strict";
   const DEFAULTS = window.VEINMARA;
-  const EDITABLE = ["peresmian", "halaman", "pemimpin", "momen"];
+  const EDITABLE = ["peresmian", "kunci", "halaman", "pemimpin", "momen"];
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -48,10 +48,8 @@
     try {
       data = await res.json();
     } catch (e) {
-      // Bukan JSON: biasanya file api/ belum terunggah (404), error PHP (500), atau diblokir hosting (403)
-      const err = new Error(res.ok
-        ? "Server membalas dengan data yang bukan JSON — PHP kemungkinan tidak aktif di hosting ini (atau halaman ini tidak dibuka dari hosting PHP/cPanel)."
-        : "Server tidak merespons dengan benar (HTTP " + res.status + ").");
+      // Bukan JSON: biasanya Worker belum ter-deploy atau halaman dibuka dari tempat lain
+      const err = new Error("Server tidak merespons dengan benar (HTTP " + res.status + ").");
       err.status = res.status;
       throw err;
     }
@@ -76,45 +74,26 @@
   /* ---------- Mulai: cek server & status login ---------- */
   (async function init() {
     if (location.protocol === "file:") {
-      $("#setup-msg").innerHTML = "Control panel harus dibuka dari alamat web hosting (mis. <code>https://domainmu/admin.html</code>), bukan dengan klik dua kali.";
+      $("#setup-msg").innerHTML = "Control panel harus dibuka dari alamat web (mis. <code>https://veinmara.216326.workers.dev/admin</code>), bukan dengan klik dua kali.";
       showView("setup");
       return;
     }
     try {
-      const s = await api("auth.php");
+      const s = await api("auth");
       csrf = s.csrf;
-      if (s.mode === "google") setupGoogleLogin(s);
+      setupGoogleLogin(s);
       s.loggedIn ? enterEditor() : showView("login");
     } catch (e) {
-      $("#setup-msg").textContent = e.message + " Lihat bagian \"Kalau ada masalah\" di PANDUAN-CPANEL.md.";
+      $("#setup-msg").textContent = e.message + " Lihat bagian \"Kalau ada masalah\" di PANDUAN.md.";
       showView("setup");
     }
   })();
 
   /* ---------- Login / keluar ---------- */
-  $("#form-login").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const btn = $("#btn-login");
-    btn.disabled = true;
-    $("#login-error").textContent = "";
-    try {
-      const r = await api("auth.php", { action: "login", password: $("#login-pass").value });
-      csrf = r.csrf;
-      $("#login-pass").value = "";
-      enterEditor();
-    } catch (err) {
-      $("#login-error").textContent = err.message;
-    } finally {
-      btn.disabled = false;
-    }
-  });
-  // Versi Cloudflare: masuk dengan akun Google admin (dicek ulang di server)
+  // Masuk dengan akun Google admin (dicek ulang di server)
   function setupGoogleLogin(s) {
-    $("#form-login").hidden = true;
-    $("#login-google").hidden = false;
-    $("#login-intro").textContent = "Khusus admin VEINMARA — masuk dengan akun Google sekolah.";
     if (!s.clientId) {
-      $("#login-error").textContent = "Login Google belum diatur: isi GOOGLE_CLIENT_ID di wrangler.jsonc (lihat PANDUAN-CLOUDFLARE.md).";
+      $("#login-error").textContent = "Login Google belum diatur: isi GOOGLE_CLIENT_ID di wrangler.jsonc (lihat PANDUAN.md).";
       return;
     }
     const render = () => {
@@ -126,9 +105,11 @@
         callback: async (r) => {
           $("#login-error").textContent = "Memeriksa…";
           try {
-            const res = await api("auth.php", { action: "login", credential: r.credential });
+            const res = await api("auth", { action: "login", credential: r.credential });
             csrf = res.csrf;
             $("#login-error").textContent = "";
+            // Web terkunci: data.js tadi dimuat versi pengunjung (tanpa pemimpin dsb.) → muat ulang sebagai admin
+            if (!DEFAULTS.pemimpin || !DEFAULTS.pemimpin.length) { location.reload(); return; }
             enterEditor();
           } catch (err) {
             $("#login-error").textContent = err.message;
@@ -148,7 +129,7 @@
 
   $("#btn-logout").addEventListener("click", async () => {
     if (anyDirty() && !confirm("Ada perubahan yang belum disimpan. Tetap keluar?")) return;
-    try { await api("auth.php", { action: "logout" }); } catch (e) { /* tetap keluar */ }
+    try { await api("auth", { action: "logout" }); } catch (e) { /* tetap keluar */ }
     location.reload();
   });
 
@@ -172,7 +153,7 @@
   /* ---------- Muat data ---------- */
   async function loadAll() {
     try {
-      const res = await api("content.php");
+      const res = await api("content");
       const base = {};
       EDITABLE.forEach((k) => (base[k] = clone(DEFAULTS[k])));
       if (res.content) {
@@ -181,6 +162,9 @@
         toast("Database masih kosong — memakai isi bawaan. Tekan Simpan untuk menerbitkannya.");
         setDirty(true);
       }
+      // isi tersimpan sebelum ada template undangan → pakai template bawaan
+      const und = base.halaman && base.halaman.undangan;
+      if (und && !und.template) und.template = DEFAULTS.halaman.undangan.template;
       // jangan timpa suntingan yang belum tersimpan (mis. setelah login ulang)
       if (!state) state = base;
       photos = res.fotos || {};
@@ -255,6 +239,33 @@
   function updateWaktuPreview() {
     const p = state.peresmian;
     $("#f-waktu-preview").textContent = p.tanggal + ", " + p.jam + " · " + (p.tempat || "");
+    updateKunciStatus();
+    updateTplPreview();
+  }
+
+  /* ---------- Kunci web ---------- */
+  function renderKunci() {
+    const mode = (state.kunci && state.kunci.mode) || "otomatis";
+    $$("#f-kunci input").forEach((r) => (r.checked = r.value === mode));
+    updateKunciStatus();
+  }
+  $("#f-kunci").addEventListener("change", (e) => {
+    state.kunci = { mode: e.target.value };
+    setDirty(true);
+    updateKunciStatus();
+  });
+  function updateKunciStatus() {
+    const el = $("#f-kunci-status");
+    if (!el || !state) return;
+    const mode = (state.kunci && state.kunci.mode) || "otomatis";
+    const p = state.peresmian;
+    const habis = new Date(p.waktu).getTime() <= Date.now();
+    el.textContent =
+      mode === "buka" ? "🔓 Terbuka" :
+      mode === "kunci" ? "🔒 Terkunci sampai diubah ke Otomatis/Buka" :
+      habis ? "🔓 Terbuka (hitung mundur sudah habis)" :
+      `🔒 Terkunci — terbuka otomatis ${p.tanggal}, ${p.jam}`;
+    if (dirty) el.textContent += " · berlaku setelah Simpan";
   }
 
   /* ---------- Halaman ---------- */
@@ -269,14 +280,67 @@
         </div>
         ${menu
           ? `<label class="ad-switch"><input type="checkbox" data-bind="halaman.${key}.tampil"> Tampilkan tautan di menu</label>`
-          : `<p class="ad-muted">Tidak tampil di menu. Bagikan link <code>${file}</code>; tamu masuk dengan akun Google sekolah (atur daftarnya di tab Undangan). Pesan di bawah tampil setelah tamu masuk.</p>`}
+          : `<p class="ad-muted">Tidak tampil di menu. Bagikan link <code>${file}</code>; tamu masuk dengan akun Google sekolah (atur daftarnya di tab Undangan), lalu melihat teks undangan di bawah dengan nama mereka sendiri.</p>`}
         <div class="ad-grid">
           <label>Judul halaman <input type="text" data-bind="halaman.${key}.judul" maxlength="40"></label>
-          <label class="ad-span">Pesan <textarea rows="3" data-bind="halaman.${key}.pesan" maxlength="300"></textarea></label>
+          ${menu ? `<label class="ad-span">Pesan <textarea rows="3" data-bind="halaman.${key}.pesan" maxlength="300"></textarea></label>` : ""}
         </div>
+        ${menu ? "" : `
+        <p class="ad-label">Teks undangan</p>
+        <div class="ad-toolbar" role="toolbar" aria-label="Format & isian teks undangan">
+          <button type="button" data-tcmd="bold" title="Tebal (Ctrl+B)"><b>B</b></button>
+          <button type="button" data-tcmd="italic" title="Miring (Ctrl+I)"><i>I</i></button>
+          <button type="button" data-tcmd="underline" title="Garis bawah (Ctrl+U)"><u>U</u></button>
+          <span class="ad-toolbar__sep"></span>
+          ${ISIAN.map(([k, l]) => `<button type="button" data-isian="${k}" title="Sisipkan {${k}}">+ ${l}</button>`).join("")}
+        </div>
+        <div class="ad-rich ad-tpl" contenteditable="true" id="tpl-undangan" aria-label="Teks undangan"></div>
+        <p class="ad-muted">Isian <code>{nama}</code> <code>{keterangan}</code> <code>{tanggal}</code> <code>{jam}</code> <code>{tempat}</code>
+          otomatis diganti untuk tiap tamu. Contoh tampilan:</p>
+        <div class="ad-tpl-preview" id="tpl-preview"></div>`}
         <a class="ad-link" href="${file}" target="_blank" rel="noopener">Lihat halaman ↗</a>
       </div>`).join("");
     bindInputs($("#halaman-list"));
+    setupTemplate();
+  }
+
+  /* ---------- Template undangan ---------- */
+  const ISIAN = [["nama", "Nama"], ["keterangan", "Keterangan"], ["tanggal", "Tanggal"], ["jam", "Jam"], ["tempat", "Tempat"]];
+  const CONTOH_TAMU = { nama: "Jao Hong Khai", keterangan: "Kelas 6 TMI Putra" };
+  function setupTemplate() {
+    const ed = $("#tpl-undangan");
+    if (!ed) return;
+    ed.innerHTML = window.VeinmaraRich.clean(state.halaman.undangan.template || "");
+    try { document.execCommand("defaultParagraphSeparator", false, "p"); } catch (e) { /* lama */ }
+    const simpan = () => {
+      state.halaman.undangan.template = window.VeinmaraRich.clean(ed.innerHTML);
+      updateTplPreview();
+      setDirty(true);
+    };
+    ed.addEventListener("input", simpan);
+    // tempel = teks biasa (format dari Word/WhatsApp tidak ikut)
+    ed.addEventListener("paste", (e) => {
+      e.preventDefault();
+      document.execCommand("insertText", false, (e.clipboardData || window.clipboardData).getData("text/plain"));
+    });
+    const bar = ed.previousElementSibling;
+    bar.addEventListener("mousedown", (e) => { if (e.target.closest("button")) e.preventDefault(); });   // fokus tetap di editor
+    bar.addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      if (document.activeElement !== ed) ed.focus();
+      if (b.dataset.tcmd) document.execCommand(b.dataset.tcmd, false, null);
+      else document.execCommand("insertText", false, "{" + b.dataset.isian + "}");
+      simpan();
+    });
+    updateTplPreview();
+  }
+  function updateTplPreview() {
+    const pv = $("#tpl-preview");
+    if (!pv || !state) return;
+    const p = state.peresmian;
+    pv.innerHTML = window.VeinmaraRich.template(state.halaman.undangan.template || "",
+      { ...CONTOH_TAMU, tanggal: p.tanggal, jam: p.jam, tempat: p.tempat });
   }
 
   /* ---------- Ketua & wakil ---------- */
@@ -407,6 +471,7 @@
 
   function renderAll() {
     renderAcara();
+    renderKunci();
     bindInputs($("[data-panel='acara']"));
     renderHalaman();
     renderPemimpin();
@@ -425,19 +490,20 @@
     try {
       const content = {};
       EDITABLE.forEach((k) => (content[k] = state[k]));
-      await api("content.php", { content });
+      await api("content", { content });
       for (const [id, data] of Object.entries(pendingPhotos)) {
         if (data) {
-          const r = await api("foto.php", { id, data });
+          const r = await api("foto", { id, data });
           photos[id] = r.url;
         } else {
-          await api("foto.php", { id, hapus: true });
+          await api("foto", { id, hapus: true });
           delete photos[id];
         }
         delete pendingPhotos[id];
       }
       setDirty(false);
       renderPemimpin();
+      updateKunciStatus();
       toast("Tersimpan. Web sudah memakai isi terbaru.");
     } catch (err) {
       $("#save-status").textContent = "Gagal menyimpan";

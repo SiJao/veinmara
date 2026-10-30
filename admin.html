@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
 </head>
 <body class="admin">
   <header class="ad-top">
@@ -29,20 +29,14 @@
     <!-- Server/API belum siap -->
     <section class="ad-card ad-center" id="view-setup" hidden>
       <h1>Server belum siap</h1>
-      <p id="setup-msg">Control panel butuh hosting PHP + MySQL (cPanel). Ikuti langkah di <b>PANDUAN-CPANEL.md</b>.</p>
-      <p class="ad-muted">Sampai saat itu, web tetap tampil memakai isi bawaan dari <code>data.js</code>.</p>
+      <p id="setup-msg">Server tidak bisa dihubungi. Lihat bagian "Kalau ada masalah" di <b>PANDUAN.md</b>.</p>
     </section>
 
     <!-- Login -->
     <section class="ad-card ad-center" id="view-login" hidden>
       <h1>Masuk</h1>
-      <p class="ad-muted" id="login-intro">Khusus admin VEINMARA.</p>
-      <form id="form-login" class="ad-form">
-        <input type="text" name="username" value="admin" autocomplete="username" hidden>
-        <label>Kata sandi <input type="password" id="login-pass" autocomplete="current-password" required></label>
-        <button class="ad-btn" type="submit" id="btn-login">Masuk</button>
-      </form>
-      <div class="ad-google" id="login-google" hidden></div>
+      <p class="ad-muted">Khusus admin VEINMARA — masuk dengan akun Google sekolah.</p>
+      <div class="ad-google" id="login-google"></div>
       <p class="ad-error" id="login-error" role="alert"></p>
     </section>
 
@@ -67,6 +61,17 @@
             <label>Tempat <input type="text" data-bind="peresmian.tempat" maxlength="80"></label>
           </div>
           <p class="ad-preview">Tampil sebagai: <b id="f-waktu-preview"></b></p>
+        </div>
+        <div class="ad-card">
+          <h2>Kunci web</h2>
+          <p class="ad-muted">Selama terkunci, pengunjung hanya melihat hitung mundur. Halaman Undangan dan Control Panel tetap bisa dibuka,
+            dan admin yang sedang masuk tetap melihat web lengkap.</p>
+          <div class="ad-radios" id="f-kunci" role="radiogroup" aria-label="Kunci web">
+            <label><input type="radio" name="kunci" value="otomatis"> <span><b>Otomatis</b> — terkunci sampai hitung mundur habis, lalu terbuka sendiri</span></label>
+            <label><input type="radio" name="kunci" value="kunci"> <span><b>Kunci</b> — tetap terkunci walau hitung mundur sudah habis</span></label>
+            <label><input type="radio" name="kunci" value="buka"> <span><b>Buka</b> — web terbuka sekarang</span></label>
+          </div>
+          <p class="ad-preview">Status: <b id="f-kunci-status"></b></p>
         </div>
       </div>
 
@@ -148,10 +153,10 @@
   <div class="ad-toast" id="toast" role="status" aria-live="polite"></div>
 
   <!-- isi bawaan (dipakai saat database masih kosong) -->
-  <script src="data.js"></script>
-  <script src="admin.js"></script>
-  <script src="rich.js"></script>
-  <script src="admin-entri.js"></script>
-  <script src="admin-tamu.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/rich.js"></script>
+  <script src="js/admin-entri.js"></script>
+  <script src="js/admin-tamu.js"></script>
 </body>
 </html>

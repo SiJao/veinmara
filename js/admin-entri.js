@@ -1,7 +1,7 @@
 /*
  * Control Panel — Artikel & Dokumentasi (album).
- * Tiap artikel/album disimpan sendiri-sendiri lewat api/entri.php (tombol "Simpan" di editornya).
- * Gambar langsung diunggah ke api/gambar.php saat dipilih; gambar yang akhirnya tidak dipakai
+ * Tiap artikel/album disimpan sendiri-sendiri lewat api/entri (tombol "Simpan" di editornya).
+ * Gambar langsung diunggah ke api/gambar saat dipilih; gambar yang akhirnya tidak dipakai
  * dibersihkan server ketika entri disimpan.
  */
 (function () {
@@ -47,7 +47,7 @@
     }
   }
   async function upload(jenis, id, nama, data) {
-    return (await api("gambar.php", { jenis, id, nama, data })).url;
+    return (await api("gambar", { jenis, id, nama, data })).url;
   }
 
   // Tampilkan tanggal "2026-11-08" → "8 Nov 2026"
@@ -80,7 +80,7 @@
     /* ---------- Daftar ---------- */
     async function muatDaftar() {
       try {
-        daftar = (await api(`entri.php?jenis=${jenis}&semua=1`)).daftar;
+        daftar = (await api(`entri?jenis=${jenis}&semua=1`)).daftar;
         if (!cur) renderDaftar();
       } catch (err) { fail(err, "Gagal memuat daftar: "); }
     }
@@ -111,7 +111,7 @@
       const btn = $("button", e.target);
       btn.disabled = true;
       try {
-        const r = await api("entri.php", { jenis, action: "buat", judul: e.target.judul.value });
+        const r = await api("entri", { jenis, action: "buat", judul: e.target.judul.value });
         daftar.unshift(r.entri);
         buka(r.entri);
         toast(`Draf ${L.satu} dibuat. Isi lalu Simpan; centang "Terbitkan" agar tampil di web.`);
@@ -121,13 +121,13 @@
     root.addEventListener("click", async (e) => {
       const ed = e.target.closest("[data-edit]"), del = e.target.closest("[data-del]");
       if (ed) {
-        try { buka((await api(`entri.php?jenis=${jenis}&id=${encodeURIComponent(ed.dataset.edit)}`)).entri); }
+        try { buka((await api(`entri?jenis=${jenis}&id=${encodeURIComponent(ed.dataset.edit)}`)).entri); }
         catch (err) { fail(err, "Gagal membuka: "); }
       } else if (del) {
         const e2 = daftar.find((x) => x.id === del.dataset.del);
         if (!confirm(`Hapus ${L.satu} "${e2 ? e2.judul : ""}" beserta semua gambarnya? Tidak bisa dibatalkan.`)) return;
         try {
-          await api("entri.php", { jenis, action: "hapus", id: del.dataset.del });
+          await api("entri", { jenis, action: "hapus", id: del.dataset.del });
           daftar = daftar.filter((x) => x.id !== del.dataset.del);
           renderDaftar();
           toast(`${L.satu[0].toUpperCase() + L.satu.slice(1)} dihapus.`);
@@ -196,7 +196,7 @@
         Object.assign(kirim, { keterangan: cur.keterangan, foto: cur.foto.map((f) => ({ n: f.n, k: f.k })) });
       }
       try {
-        const r = await api("entri.php", { jenis, action: "simpan", entri: kirim });
+        const r = await api("entri", { jenis, action: "simpan", entri: kirim });
         const i = daftar.findIndex((x) => x.id === cur.id);
         if (i >= 0) daftar[i] = r.entri;
         cur.terbit = r.entri.terbit;
@@ -269,6 +269,28 @@
       const ed = $("[data-isi]", root), s = getSelection();
       if (ed && s.rangeCount && ed.contains(s.anchorNode)) savedRange = s.getRangeAt(0).cloneRange();
     });
+    // Chrome kadang memindahkan kursor ke awal editor setelah menyisipkan gambar di akhir artikel →
+    // taruh kursor tepat setelah gambar (di paragraf baru kalau gambar ada di paling akhir)
+    function kursorSetelahGambar(url) {
+      const ed = $("[data-isi]", root);
+      const img = [...ed.querySelectorAll("img")].find((i) => i.getAttribute("src") === url);
+      if (!img) return;
+      const r = document.createRange();
+      let blok = img;
+      while (blok.parentNode !== ed) blok = blok.parentNode;
+      if (blok === img || (!img.nextSibling && !blok.nextSibling)) {
+        const p = document.createElement("p");
+        p.appendChild(document.createElement("br"));
+        blok.after(p);
+        r.setStart(p, 0);
+      } else {
+        r.setStartAfter(img);
+      }
+      r.collapse(true);
+      const s = getSelection();
+      s.removeAllRanges();
+      s.addRange(r);
+    }
     function restoreRange() {
       const ed = $("[data-isi]", root);
       ed.focus();
@@ -323,6 +345,7 @@
           const url = await upload(jenis, cur.id, randomName(), toJpeg(await loadImage(files[0]), { max: 1400 }));
           restoreRange();
           document.execCommand("insertImage", false, url);
+          kursorSetelahGambar(url);
         }, "Gambar gagal diunggah: ");
       } else if (input.matches("[data-add-foto]")) {
         await tambahFoto(files);

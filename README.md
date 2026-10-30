@@ -1,60 +1,48 @@
 # Web VEINMARA Generation
 
 Web angkatan Kelas Akhir 2026–2027, Pesantren Modern Daarul 'Uluum Lido.
-Bisa di-hosting di dua tempat (halaman web sama persis). Isi yang sering berubah diedit lewat **Control Panel**:
-- **Cloudflare Workers + D1** (https://veinmara.216326.workers.dev, login admin dengan Google) — lihat **PANDUAN-CLOUDFLARE.md**
-- **cPanel** (PHP + MySQL, login admin dengan kata sandi) — lihat **PANDUAN-CPANEL.md**
+Berjalan di **Cloudflare Workers + database D1**: https://veinmara.216326.workers.dev.
+Isi yang sering berubah diedit lewat **Control Panel** (`/admin`, login Google). Cara pakai & pengaturan: **PANDUAN.md**.
 
 ## Halaman
 
 | Halaman | Isi |
 |---|---|
-| `index.html` | Beranda: hitung mundur peresmian, filosofi nama & logo, ketua & wakil, momen penting |
-| `undangan.html` | Undangan — tidak ada di menu; tamu masuk dengan akun Google @daarululuumlido.com yang ada di daftar undangan |
-| `panggung-gembira.html` | Panggung Gembira — sementara *Coming Soon* |
+| `index.html` | Beranda: hitung mundur peresmian, filosofi nama & logo, ketua & wakil, momen, artikel & album terbaru |
 | `artikel.html` | Daftar artikel; `artikel.html?id=...` = satu artikel |
 | `dokumentasi.html` | Daftar album foto; `dokumentasi.html?id=...` = galeri satu album |
-| `admin.html` | **Control Panel** (khusus admin, perlu login) |
+| `undangan.html` | Undangan — tidak ada di menu; tamu masuk dengan akun Google @daarululuumlido.com yang ada di daftar undangan |
+| `panggung-gembira.html` | Panggung Gembira — sementara *Coming Soon* |
+| `terkunci.html` | Hitung mundur saja — tampil menggantikan halaman lain selama web **dikunci** |
+| `admin.html` | **Control Panel** (khusus admin) |
 
-## Struktur file
+## Struktur folder
 
-| File / folder | Isi |
+| Folder / file | Isi |
 |---|---|
-| `style.css`, `admin.css` | Tampilan web & control panel |
-| `fx.js` | Efek bersama: navigasi, garis nadi emas, titik cahaya |
-| `main.js` | Beranda (hitung mundur, filosofi logo, animasi scroll) |
-| `soon.js` | Halaman Coming Soon |
-| `admin.js` | Control panel (login kata sandi, simpan lewat API) |
-| `admin-entri.js` | Control panel: editor artikel & album dokumentasi |
-| `artikel.js`, `dokumentasi.js` | Halaman artikel & dokumentasi (galeri + foto layar penuh) |
-| `rich.js` | Pembersih isi artikel (hanya format aman yang tampil) |
-| `undangan.js`, `admin-tamu.js` | Login Google undangan & pengelolaan daftar tamu |
-| `api/undangan.php`, `api/tamu.php`, `api/_google.php` | Login undangan (cek tanda tangan Google + daftar), daftar tamu (admin) |
-| `api/` | Backend PHP: `auth.php` (login), `content.php` (isi web), `foto.php` (foto ketua/wakil), `entri.php` (artikel & album), `gambar.php` (gambar artikel/album) |
-| `api/config.sample.php` | Contoh konfigurasi server — salinan berisi password **tidak** di-commit |
-| `uploads/` | Gambar yang diunggah dari Control Panel (hanya di server): `foto/` ketua & wakil, `artikel/<id>/`, `album/<id>/` |
-| `content.js` | Memuat isi dari `api/content.php`; kalau gagal pakai `data.js` |
-| `data.js` | **Isi bawaan** + filosofi logo (tidak diedit dari control panel) |
+| `css/` | `style.css` (web), `admin.css` (Control Panel) |
+| `js/` | Skrip halaman — lihat tabel di bawah |
+| `assets/web/` | Logo, 11 gambar unsur logo, font |
 | `vendor/` | anime.js 4.5.0 (animasi) |
-| `assets/web/` | Gambar & font yang dipakai web (sudah dikecilkan) |
-| `assets/EMBLEM LOGO`, `LOGO ANGKATAN`, `FONT` | File asli dari Drive (besar, tidak di-push) |
-| `konten/` | Teks sumber + arsip internal (struktur lengkap) — tidak di-push |
-| `worker/index.js` | Versi Cloudflare dari `api/` (database D1, gambar juga di D1) |
+| `worker/index.js` | Server: API (`/api/...`), gambar unggahan (`/uploads/...`), kunci web, login Google |
 | `wrangler.jsonc` | Pengaturan Cloudflare: database, Client ID Google, email admin |
-| `.assetsignore` | File yang tidak ikut diunggah ke Cloudflare Workers (`api/`, `worker/`, dokumen `.md`, dll.) |
+| `.assetsignore` | File yang tidak ikut diunggah sebagai file web |
+| `konten/` | Teks sumber + arsip internal (struktur lengkap) — **hanya lokal, tidak di-push** |
 
-## Mengedit isi
-
-Setelah web dipasang di cPanel (**PANDUAN-CPANEL.md**), semua ini diedit dari `admin.html`:
-tanggal/jam/tempat peresmian, halaman Undangan & Panggung Gembira, ketua & wakil (termasuk foto), momen penting,
-artikel (dengan thumbnail) dan album dokumentasi. Artikel & album punya tombol Simpan sendiri dan status Draf/Terbit.
-
-Kalau dibuka tanpa server (mis. klik dua kali), web memakai isi bawaan di `data.js` — foto ketua & wakil bisa ditaruh manual di
-`assets/web/foto/` (`tmi-putra-ketua.jpg`, `tmi-putra-wakil.jpg`, … `tahfizh-putri-wakil.jpg`, potret 3:4).
-Tanpa foto, web menampilkan inisial nama.
+| Skrip (`js/`) | Dipakai di |
+|---|---|
+| `data.js` | Isi bawaan + filosofi logo (dipakai kalau server tidak terjangkau) |
+| `content.js` | Semua halaman: memuat isi dari `api/content` & artikel/album dari `api/entri` |
+| `fx.js` | Semua halaman: menu, garis nadi emas, titik cahaya, kartu artikel/album |
+| `rich.js` | Pembersih isi artikel & template undangan (hanya format aman yang tampil) |
+| `main.js` | Beranda |
+| `artikel.js`, `dokumentasi.js` | Artikel & dokumentasi (galeri + foto layar penuh) |
+| `soon.js`, `undangan.js` | Halaman Coming Soon & undangan (login Google tamu) |
+| `terkunci.js` | Halaman kunci (hitung mundur, terbuka sendiri saat waktunya tiba) |
+| `admin.js`, `admin-entri.js`, `admin-tamu.js` | Control Panel: isi web & kunci, artikel/album, daftar undangan |
 
 ## Catatan
 
-- Control panel harus dibuka dari alamat hosting (`https://domainmu/admin.html`), **bukan** klik dua kali.
+- Setiap push ke GitHub (`main`) otomatis di-deploy Cloudflare (±1 menit).
 - Kalau Windows/HP memakai pengaturan "kurangi gerakan" (Animation effects: Off), web sengaja tampil tanpa animasi.
 - **Font:** Chocolatier & Rosellinda Alyamore berlisensi *Personal Use* — boleh untuk web non-komersial ini, tidak untuk jualan/merchandise. Rosellinda versi gratis menampilkan "WARNING" di tempat angka — jangan dipakai untuk teks berangka. Teks isi memakai Hanken Grotesk & Amiri (Google Fonts).

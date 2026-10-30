@@ -54,5 +54,28 @@
     return out.innerHTML;
   }
 
-  window.VeinmaraRich = { clean: clean };
+  /*
+   * Template undangan: isi dibersihkan dulu, lalu {nama} {keterangan} {tanggal} {jam} {tempat}
+   * diganti dengan data sebagai teks biasa (bukan HTML), jadi nama tamu tidak bisa menyisipkan kode.
+   */
+  var ISIAN = /\{(nama|keterangan|tanggal|jam|tempat)\}/g;
+  function template(html, data) {
+    var doc = document.implementation.createHTMLDocument("");
+    var box = doc.createElement("div");
+    box.innerHTML = clean(html);
+    var w = doc.createTreeWalker(box, 4 /* NodeFilter.SHOW_TEXT */), teks = [];
+    while (w.nextNode()) teks.push(w.currentNode);
+    teks.forEach(function (n) {
+      n.nodeValue = n.nodeValue.replace(ISIAN, function (m, k) { return data[k] == null ? "" : String(data[k]); });
+    });
+    // isian kosong (mis. tamu tanpa keterangan) jangan menyisakan baris kosong di akhir paragraf
+    Array.prototype.forEach.call(box.querySelectorAll("p, li"), function (el) {
+      var last = el.lastChild;
+      while (last && ((last.nodeType === 3 && !last.nodeValue.trim()) || last.nodeName === "BR")) { el.removeChild(last); last = el.lastChild; }
+      if (!el.textContent.trim()) el.remove();
+    });
+    return box.innerHTML;
+  }
+
+  window.VeinmaraRich = { clean: clean, template: template };
 })();

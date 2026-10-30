@@ -1,15 +1,15 @@
 /*
  * Pemuat isi web.
- * Isi bawaan ada di data.js. Kalau web berjalan di hosting (cPanel) dan admin sudah
- * menyimpan sesuatu lewat Control Panel, isi dari api/content.php menimpa bawaan itu.
+ * Isi bawaan ada di data.js. Kalau admin sudah menyimpan sesuatu lewat Control Panel,
+ * isi dari api/content menimpa bawaan itu.
  * Kalau API lambat/tidak ada (mis. dibuka dengan klik dua kali), web tetap tampil
  * memakai isi bawaan.
- * Artikel & dokumentasi hanya ada di server (api/entri.php) — tanpa server, daftarnya kosong.
+ * Artikel & dokumentasi hanya ada di server (api/entri) — tanpa server, daftarnya kosong.
  */
 (function () {
   "use strict";
   var TIMEOUT = 3500;
-  var EDITABLE = ["peresmian", "halaman", "pemimpin", "momen"];
+  var EDITABLE = ["peresmian", "kunci", "halaman", "pemimpin", "momen"];
 
   // Hanya path foto dari folder uploads yang diterima
   function safePhoto(s) {
@@ -31,9 +31,14 @@
       }, function (e) { clearTimeout(t); throw e; });
   }
 
+  // Dimuat sekali per halaman (beberapa skrip boleh memanggil load())
+  var loading = null;
   function load() {
+    return loading || (loading = loadSekali());
+  }
+  function loadSekali() {
     var D = window.VEINMARA;
-    return getJson("api/content.php")
+    return getJson("api/content")
       .then(function (res) {
         if (res.content) EDITABLE.forEach(function (k) { if (res.content[k] != null) D[k] = res.content[k]; });
         var fotos = res.fotos || {};
@@ -60,13 +65,13 @@
 
   // Daftar artikel/album yang sudah terbit. Gagal → [] (bagian terkait disembunyikan)
   function list(jenis, limit) {
-    return getJson("api/entri.php?jenis=" + jenis + (limit ? "&limit=" + limit : ""))
+    return getJson("api/entri?jenis=" + jenis + (limit ? "&limit=" + limit : ""))
       .then(function (res) { return (res.daftar || []).map(cleanEntri); })
       .catch(function () { return []; });
   }
   // Satu artikel/album. Tidak ada → null; server tidak terjangkau → ditolak (pesan error)
   function get(jenis, id) {
-    return getJson("api/entri.php?jenis=" + jenis + "&id=" + encodeURIComponent(id))
+    return getJson("api/entri?jenis=" + jenis + "&id=" + encodeURIComponent(id))
       .then(function (res) { return cleanEntri(res.entri); })
       .catch(function (e) { if (e.status === 404) return null; throw e; });
   }

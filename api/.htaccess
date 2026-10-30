@@ -1,5 +1,0 @@
-# Lindungi file internal API dari akses langsung (semua file berawalan "_" + konfigurasi)
-<FilesMatch "^(_.*|config|config\.sample)\.php$">
-    Require all denied
-</FilesMatch>
-Options -Indexes

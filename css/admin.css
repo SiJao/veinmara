@@ -68,6 +68,16 @@ textarea { resize: vertical; }
 .ad-link { display: inline-block; margin-top: 12px; font-size: 13px; }
 .ad-preview { margin: 14px 0 0; color: var(--muted); }
 .ad-preview b { color: var(--gold-light); font-weight: 600; }
+.ad-radios { display: grid; gap: 10px; margin-top: 12px; }
+.ad-radios label { display: flex; align-items: flex-start; gap: 10px; color: var(--cream); font-size: 15px; cursor: pointer; }
+.ad-radios input { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--gold); }
+.ad-radios b { color: var(--gold-light); font-weight: 600; }
+.ad-label { margin: 16px 0 0; font-size: 13px; color: var(--muted); }
+.ad-tpl { min-height: 200px; }
+.ad-tpl-preview { margin-top: 10px; padding: 18px 20px; border: 1px dashed var(--line); border-radius: 12px; text-align: center; font-size: 16px; }
+.ad-tpl-preview p { margin: 0 0 1em; }
+.ad-tpl-preview p:last-child { margin-bottom: 0; }
+.ad-tpl-preview strong { color: var(--gold-light); }
 
 .ad-units { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .ad-units .ad-card { margin: 0; }
