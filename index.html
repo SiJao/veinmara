@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" href="assets/web/logo-veinmara.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Amiri:wght@400;700&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script>
     // Tandai bahwa animasi aktif (dicabut lagi di main.js kalau anime.js gagal dimuat / reduced motion)
@@ -57,15 +57,21 @@
         </h1>
         <p class="hero__motto" data-intro>A Renewal Catalyst</p>
         <p class="hero__motto-id" data-intro>Pemantik Perubahan</p>
+        <div class="hero__cta" data-intro>
+          <a class="btn btn--primary" href="#filosofi">Kenali Veinmara</a>
+        </div>
 
         <div class="countdown" id="countdown" data-intro hidden>
-          <p class="countdown__label">Menuju Peresmian · <span id="cd-when"></span></p>
+          <p class="countdown__label">Menuju Peresmian</p>
           <div class="countdown__grid" role="timer" aria-live="off">
             <div><b id="cd-d">0</b><span>Hari</span></div>
             <div><b id="cd-h">0</b><span>Jam</span></div>
             <div><b id="cd-m">0</b><span>Menit</span></div>
             <div><b id="cd-s">0</b><span>Detik</span></div>
           </div>
+          <ul class="hero__info" aria-label="Detail peresmian">
+            <li id="cd-date"></li><li id="cd-time"></li><li id="cd-place"></li>
+          </ul>
         </div>
         <p class="hero__done" id="cd-done" hidden>Telah diresmikan · 8 November 2026</p>
       </div>

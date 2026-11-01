@@ -28,7 +28,9 @@
     var target = new Date(D.peresmian.waktu).getTime();
     var cd = $("#countdown");
     var els = { d: $("#cd-d"), h: $("#cd-h"), m: $("#cd-m"), s: $("#cd-s") };
-    $("#cd-when").textContent = D.peresmian.tanggal + ", " + D.peresmian.jam;
+    $("#cd-date").textContent = D.peresmian.tanggal || "";
+    $("#cd-time").textContent = D.peresmian.jam || "";
+    $("#cd-place").textContent = D.peresmian.tempat || "";
     $("#cd-done").textContent = "Telah diresmikan · " + String(D.peresmian.tanggal).replace(/^[^,]*,\s*/, "");
     function set(el, v) {
       v = String(v).padStart(2, "0");
@@ -161,6 +163,7 @@
       .add([$(".hero__motto"), $(".hero__motto-id")], { opacity: [0, 1], y: [14, 0], duration: 900, delay: A.stagger(120) }, 1500)
       .add(cd, { opacity: [0, 1], y: [20, 0], duration: 1000 }, 1750)
       .add($$(".countdown__grid > div"), { scale: [0.8, 1], duration: 900, delay: A.stagger(80), ease: A.spring({ bounce: 0.45, duration: 800 }) }, 1750)
+      .add($(".hero__cta"), { opacity: [0, 1], y: [16, 0], duration: 900 }, 1650)
       .add($(".hero__scroll"), { opacity: [0, 1], duration: 800 }, 2300);
 
     // Setelah intro: logo melayang pelan + gelombang di huruf VEINMARA
