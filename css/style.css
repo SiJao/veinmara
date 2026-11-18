@@ -4,8 +4,8 @@
    ========================================================= */
 
 @font-face {
-  font-family: "Chocolatier";
-  src: url("../assets/web/font/chocolatier.ttf") format("truetype");
+  font-family: "Zhoro";
+  src: url("../assets/web/font/zhoro.otf") format("opentype");
   font-display: swap;
 }
 /* Personal-use: angka diganti tulisan WARNING — JANGAN dipakai untuk teks berangka */
@@ -31,7 +31,7 @@
   --emerald-light: #74e0b3;
   --line: rgba(198, 152, 86, .28);
 
-  --f-display: "Chocolatier", "Cormorant Garamond", Georgia, serif;
+  --f-display: "Zhoro", "Cormorant Garamond", Georgia, serif;
   --f-script: "Rosellinda", "Brush Script MT", cursive;
   --f-body: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-arab: "Amiri", "Traditional Arabic", serif;
