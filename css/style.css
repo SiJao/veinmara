@@ -297,10 +297,8 @@ p { margin: 0 0 1em; }
   transition: transform .5s var(--ease), box-shadow .5s var(--ease), border-color .5s;
 }
 .word:hover { transform: translateY(-6px); }
-.word--vein { background: linear-gradient(160deg, rgba(138, 30, 41, .55), rgba(42, 7, 12, .6)); }
-.word--vein:hover { box-shadow: 0 24px 60px -20px rgba(198, 152, 86, .45); border-color: var(--gold); }
-.word--mara { background: linear-gradient(160deg, rgba(31, 143, 104, .28), rgba(42, 7, 12, .6)); border-color: rgba(116, 224, 179, .25); }
-.word--mara:hover { box-shadow: 0 24px 60px -20px rgba(116, 224, 179, .4); border-color: var(--emerald-light); }
+.word--vein, .word--mara { background: linear-gradient(160deg, rgba(138, 30, 41, .55), rgba(42, 7, 12, .6)); }
+.word--vein:hover, .word--mara:hover { box-shadow: 0 24px 60px -20px rgba(198, 152, 86, .45); border-color: var(--gold); }
 .word::after {
   content: ""; position: absolute; inset: -50% auto -50% -60%; width: 40%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .09), transparent);
@@ -308,7 +306,6 @@ p { margin: 0 0 1em; }
 }
 .word:hover::after { left: 130%; }
 .word__label { font: clamp(44px, 7vw, 68px)/1 var(--f-script); color: var(--gold-light); margin-bottom: 4px; }
-.word--mara .word__label { color: var(--emerald-light); }
 .word h3 { font: 15px var(--f-body); font-weight: 600; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
 
 .closing {
