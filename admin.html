@@ -115,6 +115,21 @@
           <p class="ad-muted" id="tamu-status">Memuat…</p>
           <ul class="ad-checks" id="tamu-cek-hasil" hidden></ul>
         </div>
+        <!-- Email undangan: dikirim lewat Gmail akun sekolah, berisi tombol + kode pribadi tiap tamu -->
+        <div class="ad-card">
+          <div class="ad-row">
+            <h2>Email undangan</h2>
+            <div class="ad-row-actions" id="gmail-aksi"></div>
+          </div>
+          <p class="ad-muted" id="gmail-status">Memuat…</p>
+          <div class="ad-row" id="gmail-kirim" hidden>
+            <button type="button" class="ad-btn" id="kirim-semua">Kirim ke semua yang belum</button>
+            <button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" id="kirim-uji">Kirim email uji ke saya</button>
+          </div>
+          <p class="ad-progress" id="kirim-progress" hidden></p>
+          <p class="ad-muted ad-hint">Tombol di email membuka undangan tamu itu tanpa login, sampai 7 hari setelah acara. Link tanpa kode (mis. dari QR Code) tetap wajib login Google.
+            Teks email diatur di tab <b>Halaman</b> → Undangan.</p>
+        </div>
 
         <form class="ad-card" id="tamu-form">
           <h2 id="tamu-form-judul">Tambah tamu</h2>

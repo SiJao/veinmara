@@ -72,6 +72,33 @@ dan admin yang sedang masuk tetap melihat web lengkap. Perubahan berlaku paling 
 > Kalau tamu melihat pesan bahwa aplikasi diblokir, admin Google Workspace sekolah membatasi aplikasi pihak ketiga —
 > minta admin TI sekolah mengizinkan Client ID tadi (Admin console → Security → API controls).
 
+### 4a. Email undangan
+
+Email dikirim dari satu akun Gmail **@daarululuumlido.com**, berisi tombol **Buka Undangan** dengan kode pribadi tiap tamu
+(`undangan.html?id=…`). Tombol itu membuka undangan **tanpa login** sampai **7 hari setelah acara**. Link tanpa kode
+(mis. dari QR Code) tetap wajib login Google.
+
+**Pengaturan sekali di Google Cloud Console** (project yang sama dengan Client ID di langkah 1):
+
+1. **APIs & Services → Library** → cari **Gmail API** → **Enable**.
+2. **OAuth consent screen** → pilih **Internal** (khusus akun sekolah). Kalau terpaksa *External* dengan status *Testing*,
+   izin Gmail kedaluwarsa tiap 7 hari dan harus dihubungkan ulang.
+3. **Credentials → OAuth client (Web)** → **Authorized redirect URIs** → tambahkan
+   `https://veinmara.216326.workers.dev/api/gmail`
+4. `GOOGLE_CLIENT_SECRET` sudah tersimpan di Cloudflare (Worker veinmara → Settings → Variables and Secrets).
+
+**Di Control Panel:**
+
+1. Tab **Undangan → Email undangan → Hubungkan Gmail** → pilih akun pengirim → izinkan *kirim email*. Izin ini tidak bisa membaca email.
+2. **Kirim email uji ke saya** untuk melihat hasilnya di kotak masuk sendiri.
+3. Tab **Halaman → Undangan → Email undangan**: ubah subjek & kalimat (isian sama seperti teks undangan). Logo, detail acara,
+   dan tombol ditambahkan otomatis. Pratinjau di bawahnya sama persis dengan email yang dikirim. Lalu **Simpan**.
+4. Kirim per tamu (**Kirim** / **Kirim ulang**) atau **Kirim ke semua yang belum**. Kolom **Email undangan** mencatat waktu terkirim.
+5. **Salin link** = link pribadi tamu itu. **Ganti kode** = link lama tidak berlaku lagi (mis. email salah diteruskan) → kirim ulang.
+
+Gmail akun sekolah bisa mengirim ±2.000 email per hari. Refresh token disimpan di baris `gmail` tabel `vm_konten`
+(tidak pernah dikirim ke browser); **Putuskan** menghapusnya.
+
 ## Kuota gratis
 
 | Batas | Kira-kira |
@@ -97,6 +124,10 @@ Kalau database mulai penuh, foto bisa dipindah ke R2 tanpa mengubah halaman web.
 | Tombol Google error *origin_mismatch* | Alamat web belum ada di **Authorized JavaScript origins** (langkah 1.2) |
 | "Akun ... bukan admin" | Email itu tidak ada di `ADMIN_EMAIL` |
 | "Email ... tidak ada dalam daftar undangan" | Tambahkan email itu di tab Undangan |
+| Hubungkan Gmail → *redirect_uri_mismatch* | Alamat `…/api/gmail` belum ada di **Authorized redirect URIs** (langkah 4a.3) |
+| "Gmail menolak (HTTP 403) … not been used / disabled" | **Gmail API** belum di-*Enable* (langkah 4a.1) |
+| "Izin Gmail sudah dicabut atau kedaluwarsa" | Hubungkan ulang Gmail; kalau berulang tiap 7 hari, ubah consent screen ke **Internal** |
+| Tamu: "Link undangan … kedaluwarsa" | Sudah lewat 7 hari setelah acara — tamu tetap bisa masuk dengan akun Google |
 | "Database belum dihubungkan" | Bagian `d1_databases` di `wrangler.jsonc` terhapus / ID salah |
 | Web masih terkunci padahal sudah Buka | Tunggu ±15 detik lalu muat ulang; pastikan sudah tekan **Simpan** |
 | Deploy gagal | Dashboard → Workers & Pages → veinmara → **Deployments** → buka log build |

@@ -11,6 +11,13 @@
   var csrf = "", cfg = null;
   var wait = $("#inv-wait"), login = $("#inv-login"), card = $("#inv-card"), err = $("#inv-error");
 
+  // Kode pribadi dari tombol di email (undangan.html?id=...). Tanpa kode → wajib login Google.
+  var kode = new URLSearchParams(location.search).get("id") || "";
+  var PESAN_KODE = {
+    "tidak-sah": "Link undangan ini tidak berlaku (mungkin sudah diganti panitia). Silakan masuk dengan akun sekolah.",
+    "kedaluwarsa": "Link undangan di email sudah kedaluwarsa. Silakan masuk dengan akun sekolah."
+  };
+
   function api(payload) {
     var opt = { credentials: "same-origin", cache: "no-store", headers: {} };
     if (payload) {
@@ -19,7 +26,8 @@
       opt.headers["X-CSRF"] = csrf;
       opt.body = JSON.stringify(payload);
     }
-    return fetch("api/undangan", opt).then(function (r) {
+    var url = "api/undangan" + (!payload && kode ? "?id=" + encodeURIComponent(kode) : "");
+    return fetch(url, opt).then(function (r) {
       return r.json().catch(function () { return { ok: false, error: "Server tidak merespons dengan benar (HTTP " + r.status + ")." }; })
         .then(function (d) { if (!r.ok || d.ok === false) throw new Error(d.error || "HTTP " + r.status); return d; });
     });
@@ -50,10 +58,13 @@
     $("#inv-rundown").hidden = !ol.children.length;
   }
 
-  function showCard(t, rundown) {
+  function showCard(t, rundown, lewatKode) {
     wait.hidden = true; login.hidden = true; card.hidden = false;
     showRundown(rundown);
     $("#inv-email").textContent = t.email;
+    // dibuka dari tombol di email: tidak ada sesi login, jadi tidak ada tombol Keluar
+    $("#inv-who-label").textContent = lewatKode ? "Undangan untuk" : "Masuk sebagai";
+    $("#inv-keluar-wrap").hidden = !!lewatKode;
     $("#inv-isi").innerHTML = "";
     window.VeinmaraContent.load().then(function (D) {
       var p = D.peresmian || {};
@@ -127,9 +138,9 @@
     cfg = d;
     csrf = d.csrf;
     $("#inv-domain").textContent = "@" + d.domain;
-    if (d.tamu) return showCard(d.tamu, d.rundown);
-    if (!d.clientId) return showError("Login undangan belum diatur oleh admin.");
-    showLogin();
+    if (d.tamu) return showCard(d.tamu, d.rundown, d.kode === "ok");
+    if (!d.clientId) return showError(PESAN_KODE[d.kode] || "Login undangan belum diatur oleh admin.");
+    showLogin(PESAN_KODE[d.kode]);
     renderButton();
   }, function (e) {
     showError("Undangan tidak bisa dimuat: " + e.message);

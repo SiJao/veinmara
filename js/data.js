@@ -35,6 +35,17 @@ window.VEINMARA = {
         "<p>Dengan memohon rahmat Allah SWT, kami mengundang Anda untuk menghadiri " +
         "<strong>Peresmian Angkatan VEINMARA Generation</strong> pada {tanggal}, pukul {jam}, bertempat di {tempat}.</p>" +
         "<p>Merupakan suatu kehormatan bagi kami atas kehadiran Anda.</p>",
+      // Email undangan (Control Panel → Undangan → Kirim email). Isian sama seperti template di atas;
+      // detail acara, tombol "Buka Undangan", dan logo ditambahkan otomatis oleh server.
+      email: {
+        subjek: "Undangan Peresmian Angkatan VEINMARA Generation untuk {nama}",
+        isi:
+          "<p>Assalamu'alaikum warahmatullahi wabarakatuh,</p>" +
+          "<p>Kepada Yth.<br><strong>{nama}</strong><br>{keterangan}</p>" +
+          "<p>Dengan penuh rasa syukur, kami mengundang Anda untuk hadir dan menjadi saksi " +
+          "<strong>Peresmian Angkatan VEINMARA Generation</strong> — <em>A Renewal Catalyst</em>.</p>" +
+          "<p>Kehadiran Anda adalah kehormatan dan doa terbaik bagi perjalanan kami.</p>",
+      },
     },
     panggung: {
       tampil: true,

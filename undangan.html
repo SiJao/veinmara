@@ -6,6 +6,8 @@
   <title>Undangan · VEINMARA Generation</title>
   <meta name="description" content="Undangan Peresmian Angkatan VEINMARA Generation.">
   <meta name="theme-color" content="#1c0509">
+  <!-- link dari email memuat kode pribadi (?id=) — jangan bocor ke situs lain lewat Referer -->
+  <meta name="referrer" content="same-origin">
   <link rel="icon" type="image/png" href="assets/web/logo-veinmara.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,7 +62,7 @@
             <h2>Rundown Acara</h2>
             <ol id="inv-rundown-list"></ol>
           </section>
-          <p class="invite__who">Masuk sebagai <span id="inv-email"></span> · <button type="button" id="inv-keluar">Keluar</button></p>
+          <p class="invite__who"><span id="inv-who-label">Masuk sebagai</span> <span id="inv-email"></span><span id="inv-keluar-wrap"> · <button type="button" id="inv-keluar">Keluar</button></span></p>
         </div>
       </div>
       <a class="btn" href="index.html" data-intro>← Kembali ke Beranda</a>

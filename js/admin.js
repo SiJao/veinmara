@@ -165,6 +165,7 @@
       // isi tersimpan sebelum ada template undangan → pakai template bawaan
       const und = base.halaman && base.halaman.undangan;
       if (und && !und.template) und.template = DEFAULTS.halaman.undangan.template;
+      if (und && !(und.email && und.email.isi)) und.email = clone(DEFAULTS.halaman.undangan.email);
       // jangan timpa suntingan yang belum tersimpan (mis. setelah login ulang)
       if (!state) state = base;
       photos = res.fotos || {};
@@ -194,6 +195,7 @@
     if (!el || !state) return;
     setPath(el.dataset.bind, el.type === "checkbox" ? el.checked : el.value);
     if (el.dataset.bind.startsWith("peresmian.")) updateWaktuPreview();
+    if (el.dataset.bind.startsWith("halaman.undangan.email.")) updateEmailPreview();
     setDirty(true);
   });
 
@@ -241,6 +243,7 @@
     $("#f-waktu-preview").textContent = p.tanggal + ", " + p.jam + " · " + (p.tempat || "");
     updateKunciStatus();
     updateTplPreview();
+    updateEmailPreview();
   }
 
   /* ---------- Kunci web ---------- */
@@ -336,11 +339,28 @@
         <div class="ad-rich ad-tpl" contenteditable="true" id="tpl-undangan" aria-label="Teks undangan"></div>
         <p class="ad-muted">Isian <code>{nama}</code> <code>{keterangan}</code> <code>{tanggal}</code> <code>{jam}</code> <code>{tempat}</code>
           otomatis diganti untuk tiap tamu. Contoh tampilan:</p>
-        <div class="ad-tpl-preview" id="tpl-preview"></div>`}
+        <div class="ad-tpl-preview" id="tpl-preview"></div>
+
+        <p class="ad-label">Email undangan <span class="ad-hint">— dikirim dari tab Undangan; logo, detail acara & tombol "Buka Undangan" ditambahkan otomatis</span></p>
+        <div class="ad-grid ad-grid--tight">
+          <label class="ad-span">Subjek email <input type="text" data-bind="halaman.undangan.email.subjek" maxlength="200"></label>
+        </div>
+        <div class="ad-toolbar" role="toolbar" aria-label="Format & isian email undangan">
+          <button type="button" data-tcmd="bold" title="Tebal (Ctrl+B)"><b>B</b></button>
+          <button type="button" data-tcmd="italic" title="Miring (Ctrl+I)"><i>I</i></button>
+          <button type="button" data-tcmd="underline" title="Garis bawah (Ctrl+U)"><u>U</u></button>
+          <span class="ad-toolbar__sep"></span>
+          ${ISIAN.map(([k, l]) => `<button type="button" data-isian="${k}" title="Sisipkan {${k}}">+ ${l}</button>`).join("")}
+        </div>
+        <div class="ad-rich ad-tpl" contenteditable="true" id="tpl-email" aria-label="Isi email undangan"></div>
+        <p class="ad-muted">Pratinjau email (contoh tamu):</p>
+        <p class="ad-mono" id="email-subjek-preview"></p>
+        <iframe class="ad-email-preview" id="email-preview" title="Pratinjau email undangan" sandbox></iframe>`}
         <a class="ad-link" href="${file}" target="_blank" rel="noopener">Lihat halaman ↗</a>
       </div>`).join("");
     bindInputs($("#halaman-list"));
     setupTemplate();
+    setupEmailTemplate();
   }
 
   /* ---------- Template undangan ---------- */
@@ -349,11 +369,18 @@
   function setupTemplate() {
     const ed = $("#tpl-undangan");
     if (!ed) return;
-    ed.innerHTML = window.VeinmaraRich.clean(state.halaman.undangan.template || "");
+    pasangEditor(ed, state.halaman.undangan.template, (html) => {
+      state.halaman.undangan.template = html;
+      updateTplPreview();
+    });
+    updateTplPreview();
+  }
+  // Editor teks kecil (template undangan & email): toolbar = elemen tepat sebelum editor
+  function pasangEditor(ed, awal, ubah) {
+    ed.innerHTML = window.VeinmaraRich.clean(awal || "");
     try { document.execCommand("defaultParagraphSeparator", false, "p"); } catch (e) { /* lama */ }
     const simpan = () => {
-      state.halaman.undangan.template = window.VeinmaraRich.clean(ed.innerHTML);
-      updateTplPreview();
+      ubah(window.VeinmaraRich.clean(ed.innerHTML));
       setDirty(true);
     };
     ed.addEventListener("input", simpan);
@@ -372,7 +399,33 @@
       else document.execCommand("insertText", false, "{" + b.dataset.isian + "}");
       simpan();
     });
-    updateTplPreview();
+  }
+
+  /* ---------- Template email undangan (pratinjau dibuat server, sama persis dengan yang dikirim) ---------- */
+  function setupEmailTemplate() {
+    const ed = $("#tpl-email");
+    if (!ed) return;
+    pasangEditor(ed, state.halaman.undangan.email.isi, (html) => {
+      state.halaman.undangan.email.isi = html;
+      updateEmailPreview();
+    });
+    updateEmailPreview();
+  }
+  let emailTimer = null, emailSeq = 0;
+  function updateEmailPreview() {
+    if (!$("#email-preview") || !state) return;
+    clearTimeout(emailTimer);
+    emailTimer = setTimeout(async () => {
+      const seq = ++emailSeq;
+      try {
+        const r = await api("tamu", { action: "pratinjau", email: state.halaman.undangan.email, peresmian: state.peresmian });
+        if (seq !== emailSeq) return;   // sudah ada ketikan yang lebih baru
+        $("#email-subjek-preview").textContent = "Subjek: " + r.subjek;
+        $("#email-preview").srcdoc = r.html;
+      } catch (err) {
+        if (!handleAuthError(err)) $("#email-subjek-preview").textContent = "Pratinjau gagal: " + err.message;
+      }
+    }, 500);
   }
   function updateTplPreview() {
     const pv = $("#tpl-preview");

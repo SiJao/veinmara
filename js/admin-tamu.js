@@ -10,13 +10,20 @@
   const fail = (err, awalan) => { if (!handleAuthError(err)) toast(awalan + err.message, true); };
   const waktu = (iso) => iso ? new Date(iso).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }) : "";
 
+  // relatif terhadap halaman ini (Cloudflare menyajikan admin.html sebagai /admin)
+  const LINK_UNDANGAN = new URL("undangan.html", location.href).href;
+  const linkTamu = (kode) => `${LINK_UNDANGAN}?id=${kode}`;
+  let gmail = null, kodeSampai = null, mengirim = false;
+
   async function muat() {
     try {
       const r = await api("tamu");
       daftar = r.daftar;
       domain = r.domain;
+      kodeSampai = r.kodeSampai;
+      muatGmail();
       $("#tamu-status").innerHTML = r.clientId
-        ? `Aktif. Tamu masuk dengan akun <b>@${esc(domain)}</b>. Link undangan: <code>${esc(location.origin + location.pathname.replace(/admin\.html$/, ""))}undangan.html</code>`
+        ? `Aktif. Tamu masuk dengan akun <b>@${esc(domain)}</b>. Link undangan: <code>${esc(LINK_UNDANGAN)}</code>`
         : `<b>Belum diatur.</b> Isi <code>GOOGLE_CLIENT_ID</code> di <code>wrangler.jsonc</code> (lihat PANDUAN.md). Daftar tamu tetap bisa disiapkan sekarang.`;
       render();
     } catch (err) { fail(err, "Gagal memuat daftar undangan: "); }
@@ -26,16 +33,23 @@
     const q = $("#tamu-cari").value.trim().toLowerCase();
     const list = q ? daftar.filter((t) => (t.nama + " " + t.email + " " + t.keterangan).toLowerCase().includes(q)) : daftar;
     const dibuka = daftar.filter((t) => t.dibuka).length;
-    $("#tamu-jumlah").textContent = `· ${daftar.length} tamu, ${dibuka} sudah membuka`;
+    const terkirim = daftar.filter((t) => t.dikirim).length;
+    $("#tamu-jumlah").textContent = `· ${daftar.length} tamu, ${terkirim} email terkirim, ${dibuka} sudah membuka`;
+    $("#kirim-semua").textContent = `Kirim ke semua yang belum (${daftar.length - terkirim})`;
+    $("#kirim-semua").disabled = mengirim || daftar.length === terkirim;
     $("#tamu-tabel").innerHTML = list.length ? `
-      <thead><tr><th>Nama</th><th>Email</th><th>Keterangan</th><th>Dibuka</th><th></th></tr></thead>
+      <thead><tr><th>Nama</th><th>Email</th><th>Keterangan</th><th>Email undangan</th><th>Dibuka</th><th></th></tr></thead>
       <tbody>${list.map((t) => `
         <tr>
           <td>${esc(t.nama)}</td>
           <td class="ad-mono">${esc(t.email)}</td>
           <td>${esc(t.keterangan)}</td>
+          <td class="ad-tamu-mail">${t.dikirim ? `<span class="ad-ok">✓ ${esc(waktu(t.dikirim))}</span>` : `<span class="ad-muted">Belum</span>`}</td>
           <td>${t.dibuka ? `<span class="ad-ok">✓ ${esc(waktu(t.dibuka))}</span>` : `<span class="ad-muted">Belum</span>`}</td>
           <td><div class="ad-row-actions">
+            <button type="button" class="ad-btn ad-btn--sm" data-tkirim="${esc(t.email)}" ${gmail && gmail.terhubung && !mengirim ? "" : "disabled"}>${t.dikirim ? "Kirim ulang" : "Kirim"}</button>
+            ${t.kode ? `<button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" data-tlink="${esc(t.kode)}" title="Salin link pribadi tamu ini">Salin link</button>
+            <button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" data-tkode="${esc(t.email)}" title="Link lama tidak berlaku lagi">Ganti kode</button>` : ""}
             <button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" data-tedit="${esc(t.email)}">Ubah</button>
             <button type="button" class="ad-btn ad-btn--ghost ad-btn--sm ad-btn--danger" data-tdel="${esc(t.email)}">Hapus</button>
           </div></td>
@@ -73,7 +87,24 @@
 
   $("#tamu-tabel").addEventListener("click", async (e) => {
     const ed = e.target.closest("[data-tedit]"), del = e.target.closest("[data-tdel]");
-    if (ed) {
+    const kirimSatu = e.target.closest("[data-tkirim]"), link = e.target.closest("[data-tlink]"), kode = e.target.closest("[data-tkode]");
+    if (kirimSatu) {
+      const t = daftar.find((x) => x.email === kirimSatu.dataset.tkirim);
+      if (t.dikirim && !confirm(`Email undangan sudah dikirim ke ${t.email}. Kirim lagi?`)) return;
+      await kirim([t.email]);
+    } else if (link) {
+      try { await navigator.clipboard.writeText(linkTamu(link.dataset.tlink)); toast("Link pribadi disalin. Jangan dibagikan ke orang lain."); }
+      catch (err) { prompt("Salin link ini:", linkTamu(link.dataset.tlink)); }
+    } else if (kode) {
+      if (!confirm(`Ganti kode ${kode.dataset.tkode}? Tombol di email yang sudah terkirim tidak akan berfungsi lagi — kirim ulang emailnya sesudah ini.`)) return;
+      try {
+        const r = await api("tamu", { action: "kodebaru", emails: [kode.dataset.tkode] });
+        const t = daftar.find((x) => x.email === kode.dataset.tkode);
+        t.kode = r.kode; t.dikirim = "";
+        render();
+        toast("Kode diganti. Link lama sudah tidak berlaku.");
+      } catch (err) { fail(err, "Gagal mengganti kode: "); }
+    } else if (ed) {
       const t = daftar.find((x) => x.email === ed.dataset.tedit);
       const f = $("#tamu-form");
       editing = t.email;
@@ -149,6 +180,88 @@
       ul.innerHTML = li(c.clientId, "Client ID Google sudah diisi") + li(c.koneksi, "Server bisa menghubungi Google");
     } catch (err) { ul.hidden = true; fail(err, "Gagal memeriksa: "); }
   });
+
+  /* ---------- Email undangan (Gmail) ---------- */
+  async function muatGmail() {
+    try {
+      gmail = await api("gmail");
+      const st = $("#gmail-status"), aksi = $("#gmail-aksi");
+      const sampai = kodeSampai ? new Date(kodeSampai).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" }) : null;
+      if (!gmail.siap) {
+        st.innerHTML = `<b>Belum bisa dipakai.</b> <code>GOOGLE_CLIENT_SECRET</code> belum diisi di Cloudflare (lihat PANDUAN.md).`;
+        aksi.innerHTML = "";
+      } else if (gmail.terhubung) {
+        st.innerHTML = `Dikirim dari <b>${esc(gmail.email)}</b>.` + (sampai ? ` Tombol di email berlaku sampai <b>${esc(sampai)}</b>.` : "");
+        aksi.innerHTML = `<a class="ad-btn ad-btn--ghost ad-btn--sm" href="api/gmail?mulai=1">Ganti akun</a>
+          <button type="button" class="ad-btn ad-btn--ghost ad-btn--sm ad-btn--danger" id="gmail-putus">Putuskan</button>`;
+      } else {
+        st.innerHTML = `Belum ada akun pengirim. Hubungkan satu akun <b>@${esc(domain)}</b> — Google akan meminta izin <i>mengirim email atas nama Anda</i> (tidak bisa membaca email).`;
+        aksi.innerHTML = `<a class="ad-btn ad-btn--sm" href="api/gmail?mulai=1">Hubungkan Gmail</a>`;
+      }
+      $("#gmail-kirim").hidden = !gmail.terhubung;
+      render();
+    } catch (err) { fail(err, "Gagal memuat status Gmail: "); }
+  }
+  $("#gmail-aksi").addEventListener("click", async (e) => {
+    if (!e.target.closest("#gmail-putus")) return;
+    if (!confirm("Putuskan akun pengirim? Email undangan tidak bisa dikirim sampai akun dihubungkan lagi.")) return;
+    try { await api("gmail", { action: "putus" }); toast("Akun pengirim diputuskan."); muatGmail(); }
+    catch (err) { fail(err, "Gagal: "); }
+  });
+
+  // Kirim per 10 email (batas server), tampilkan kemajuan
+  async function kirim(emails) {
+    if (mengirim) return;
+    mengirim = true;
+    render();
+    const prog = $("#kirim-progress");
+    prog.hidden = false;
+    let ok = 0;
+    const gagal = [];
+    try {
+      for (let i = 0; i < emails.length; i += 10) {
+        prog.textContent = `Mengirim ${Math.min(i + 10, emails.length)} dari ${emails.length}…`;
+        const r = await api("tamu", { action: "kirim", emails: emails.slice(i, i + 10) });
+        r.hasil.forEach((h) => {
+          const t = daftar.find((x) => x.email === h.email);
+          if (t && h.kode) t.kode = h.kode;
+          if (h.ok) { ok++; if (t) t.dikirim = h.dikirim; } else gagal.push(h.email + ": " + h.error);
+        });
+        render();
+        if (gagal.some((g) => /Hubungkan ulang Gmail/.test(g))) break;
+      }
+    } catch (err) {
+      fail(err, "Pengiriman berhenti: ");
+    } finally {
+      mengirim = false;
+      render();
+    }
+    prog.innerHTML = `${ok} email terkirim.` + (gagal.length ? ` ${gagal.length} gagal:<br>` + gagal.slice(0, 10).map(esc).join("<br>") : "");
+    if (ok) toast(`${ok} email undangan terkirim.`);
+  }
+  $("#kirim-semua").addEventListener("click", () => {
+    const belum = daftar.filter((t) => !t.dikirim).map((t) => t.email);
+    if (!belum.length) return;
+    if (!confirm(`Kirim email undangan ke ${belum.length} tamu yang belum dikirimi?`)) return;
+    kirim(belum);
+  });
+  $("#kirim-uji").addEventListener("click", async () => {
+    const b = $("#kirim-uji");
+    b.disabled = true;
+    try { const r = await api("tamu", { action: "uji" }); toast(`Email uji terkirim ke ${r.ke}. Cek kotak masuk (atau folder Spam).`); }
+    catch (err) { fail(err, "Email uji gagal: "); }
+    finally { b.disabled = false; }
+  });
+
+  // Kembali dari halaman izin Google (api/gmail → admin.html?gmail=...)
+  const hasilGmail = new URLSearchParams(location.search).get("gmail");
+  if (hasilGmail !== null) {
+    history.replaceState(null, "", location.pathname + location.hash);
+    document.addEventListener("vm:editor", () => {
+      toast(hasilGmail === "ok" ? "Gmail pengirim terhubung." : hasilGmail, hasilGmail !== "ok");
+      document.querySelector('[data-tab="tamu"]').click();
+    }, { once: true });
+  }
 
   document.addEventListener("vm:editor", muat);
 })();
